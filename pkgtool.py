@@ -3,8 +3,9 @@
 # vim:fileencoding=utf-8:fdm=marker:ft=python
 #
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
+# SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-10-15T10:35:32+0200
+# Last modified: 2022-10-15T12:23:33+0200
 
 import functools
 import os

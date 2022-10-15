@@ -3,8 +3,9 @@
 # vim:fileencoding=utf-8:fdm=marker:ft=python
 #
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
+# SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2022-10-13T07:42:25+0200
+# Last modified: 2022-10-15T12:23:25+0200
 
 import json
 import os
