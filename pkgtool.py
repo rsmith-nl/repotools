@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-# file: pkg-quarterly.py
+# file: pkgtool.py
 # vim:fileencoding=utf-8:fdm=marker:ft=python
 #
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-10-14T22:13:40+0200
+# Last modified: 2022-10-15T10:34:24+0200
 
 import functools
 import os
