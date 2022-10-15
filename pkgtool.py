@@ -4,7 +4,7 @@
 #
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-10-15T10:34:24+0200
+# Last modified: 2022-10-15T10:35:32+0200
 
 import functools
 import os
@@ -13,11 +13,12 @@ import subprocess as sp
 import sys
 import time
 
-
+# Configuration
 ABI = "FreeBSD:13:amd64"
 REL = "quarterly"
 PKGDIR = "packages/"
 
+# Supported commands
 cmds = ["list", "show", "contains", "get", "info"]
 
 
