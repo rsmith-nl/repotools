@@ -5,7 +5,7 @@ Scripts for interacting with FreeBSD package repositories
 :tags: 
 :author: Roland Smith
 
-.. Last modified: 2022-10-15T10:33:39+0200
+.. Last modified: 2022-10-15T12:22:34+0200
 .. vim:spelllang=en
 
 For updating several machines to FreeBSD 13.1 I wanted to download all the
@@ -45,4 +45,21 @@ These tables have the following definitions.
 pkgtool
 -------
 
+This script can download packages from ``pkg.freebsd.org`` using ``curl``.
+Downloaded packages are placed in the ``packages`` directory.
 
+It reads ``packagesite.db`` and then carries out one of the following
+commands:
+
+* ``list``: List all the packages in ``packagesite.db``.
+* ``contains <string>``: List all the packages that have the given string in
+  their name.
+* ``info <pkgname>``: When given a valid package name (without version), it
+  produces information about this package
+* ``show <pkgname>``: When given a valid package name (without version), it
+  produces information about this package and shows the package and all its
+  dependencies that would be downloaded if they weren't already in the
+  ``packages/`` directory.
+* ``get <pkgname>``: When given a valid package name (without version),
+  download the package and *all* its dependencies unless they already exist in
+  in the ``packages/`` directory.
