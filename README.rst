@@ -5,13 +5,16 @@ Scripts for interacting with FreeBSD package repositories
 :tags: 
 :author: Roland Smith
 
-.. Last modified: 2022-10-15T12:22:34+0200
+.. Last modified: 2022-10-19T10:23:07+0200
 .. vim:spelllang=en
 
-For updating several machines to FreeBSD 13.1 I wanted to download all the
+For updating several machines to FreeBSD 13.1 (amd64) I wanted to download all the
 packages I need beforehand without installing them.
 
 Since I could not find a way to do that using ``pkg``, I wrote my own tools.
+
+It can be used for other versions, architectures and releases by editing the
+configuration variables at the begin of ``pkgtool.py``
 
 .. PELICAN_END_SUMMARY
 
@@ -19,8 +22,17 @@ makedb
 ------
 
 Every package site contains a file ``packagesite.txz``, which contains the
-file ``packagesite.yaml``.
-The script ``makedb.py`` reads the YAML file, converts it to JSON and then to
+file ``packagesite.yaml``, ``packagesite.yaml.pub`` and ``packagesite.yaml.sig``.
+We are interested in the YAML file.
+
+The signature can be verified as follows::
+
+    sha256 -q packagesite.yaml | tr -d '\n' | \
+    openssl dgst -verify packagesite.yaml.pub -signature packagesite.yaml.sig
+
+This should return ``Verified OK``.
+
+The script ``makedb.py`` reads the YAML file, and converts the contents to
 Python native data structures.
 
 From those data structures it fills a couple of SQL tables and saves them in
