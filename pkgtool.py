@@ -5,9 +5,10 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-10-19T11:38:08+0200
+# Last modified: 2022-10-19T12:19:59+0200
 
 import functools
+import glob
 import os
 import sqlite3
 import subprocess as sp
@@ -140,7 +141,9 @@ def cmd_get(cur, start, pkgname):
 
 def cmd_leaves(cur, start):
     """Print those names from PKGDIR which are not depended on."""
-    allpkgs = set(cur.execute("SELECT rowid FROM packages").fetchall())
+    pkgdict = dict(cur.execute("SELECT repopath, rowid FROM packages"))
+    allnames = [j.replace('packages/', 'All/') for j in glob.glob(PKGDIR + "*.pkg")]
+    allpkgs = set((pkgdict[n],) for n in allnames)
     are_deps = set(cur.execute("SELECT depid FROM deps"))
     leaves = allpkgs - are_deps
     leafnames = sorted(
@@ -150,8 +153,7 @@ def cmd_leaves(cur, start):
         for p in leaves
     )
     for p in leafnames:
-        if os.path.exists(PKGDIR + p):
-            print(p)
+        print(p)
     duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
 
@@ -159,7 +161,7 @@ def cmd_leaves(cur, start):
 def contains(cur, s):
     """Return a list of package names that contain s."""
     cur.execute(f"SELECT name FROM packages WHERE name LIKE '%{s}%'")
-    return [j[0] for j in cur.fetchall()]
+    return [j[0] for j in cur]
 
 
 def deps(cur, name):
