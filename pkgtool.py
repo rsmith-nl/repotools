@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-10-19T12:19:59+0200
+# Last modified: 2022-10-19T13:19:12+0200
 
 import functools
 import glob
@@ -142,10 +142,17 @@ def cmd_get(cur, start, pkgname):
 def cmd_leaves(cur, start):
     """Print those names from PKGDIR which are not depended on."""
     pkgdict = dict(cur.execute("SELECT repopath, rowid FROM packages"))
-    allnames = [j.replace('packages/', 'All/') for j in glob.glob(PKGDIR + "*.pkg")]
-    allpkgs = set((pkgdict[n],) for n in allnames)
-    are_deps = set(cur.execute("SELECT depid FROM deps"))
-    leaves = allpkgs - are_deps
+    presentnames = [j.replace("packages/", "All/") for j in glob.glob(PKGDIR + "*.pkg")]
+    presentpkgs = set((pkgdict[n],) for n in presentnames)
+    leaves = set()
+    for p in presentpkgs:
+        pdeps = set(
+            j
+            for j in cur.execute("SELECT pkgid FROM deps WHERE depid IS ?", p)
+            if j in presentpkgs
+        )
+        if len(pdeps) == 0:
+            leaves.add(p)
     leafnames = sorted(
         cur.execute("SELECT repopath FROM packages WHERE rowid IS ?", p)
         .fetchone()[0]
