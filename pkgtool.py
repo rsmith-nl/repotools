@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-10-15T12:23:33+0200
+# Last modified: 2022-10-19T11:38:08+0200
 
 import functools
 import os
@@ -17,10 +17,10 @@ import time
 # Configuration
 ABI = "FreeBSD:13:amd64"
 REL = "quarterly"
-PKGDIR = "packages/"
+PKGDIR = "packages/"  # must end with path separator.
 
 # Supported commands
-cmds = ["list", "show", "contains", "get", "info"]
+cmds = ["list", "show", "contains", "get", "info", "leaves"]
 
 
 def main():  # noqa
@@ -39,78 +39,121 @@ def main():  # noqa
 
     # Process commands.
     if cmd == "list":
-        cur.execute("SELECT repopath FROM packages ORDER BY repopath ASC")
-        for j in cur.fetchall():
-            print(j[0][4:])
-        duration = time.monotonic() - start
-        print(f"duration: {duration:.3f} s")
+        cmd_list(cur, start)
     elif cmd == "contains":
-        for p in contains(cur, pkgname):
-            print(p)
-        duration = time.monotonic() - start
-        print(f"# duration: {duration:.3f} s")
+        cmd_contains(cur, start, pkgname)
     elif cmd == "info":
-        cur.execute(
-            "SELECT origin, version, repopath, comment FROM packages WHERE name IS ?",
-            (pkgname,),
-        )
-        try:
-            origin, version, repopath, comment = cur.fetchone()
-            print(f"Name: {pkgname}")
-            print(f"Version: {version}")
-            print(f"Location in repository: {repopath}")
-            print(f"Origin: {origin}")
-            print(f"Comment: {comment}")
-        except TypeError:
-            print(f"# package “{pkgname}” does not exist.")
-        duration = time.monotonic() - start
-        print(f"# duration: {duration:.3f} s")
+        cmd_info(cur, start, pkgname)
     elif cmd == "show":
-        cur.execute(
-            "SELECT origin, version, repopath, comment FROM packages WHERE name IS ?",
-            (pkgname,),
-        )
-        try:
-            origin, version, repopath, comment = cur.fetchone()
-            print(f"Name: {pkgname}")
-            print(f"Version: {version}")
-            print(f"Location in repository: {repopath}")
-            print(f"Origin: {origin}")
-            print(f"Comment: {comment}")
-            print("---------------------")
-            print("Packages to retrieve:")
-            rps = deps(cur, pkgname)
-            alldeps = [
-                cur.execute(
-                    "SELECT repopath FROM packages WHERE rowid IS ?", d
-                ).fetchone()
-                for d in rps
-            ]
-            for rp in alldeps:
-                pkgname = rp[0].split("/")[-1]
-                if not os.path.exists(PKGDIR + pkgname):
-                    print(rp[0])
-                else:
-                    print(f"# skipping {pkgname}, already exists.")
-        except TypeError:
-            print(f"# package “{pkgname}” does not exist.")
-        duration = time.monotonic() - start
-        print(f"# duration: {duration:.3f} s")
+        cmd_show(cur, start, pkgname)
     elif cmd == "get":
-        print("Retrieving packages:")
+        cmd_get(cur, start, pkgname)
+    elif cmd == "leaves":
+        cmd_leaves(cur, start)
+
+
+def cmd_list(cur, start):
+    cur.execute("SELECT repopath FROM packages ORDER BY repopath ASC")
+    for j in cur.fetchall():
+        print(j[0][4:])
+    duration = time.monotonic() - start
+    print(f"duration: {duration:.3f} s")
+
+
+def cmd_contains(cur, start, pkgname):
+    """Show packages whose name contains pkgname"""
+    for p in contains(cur, pkgname):
+        print(p)
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
+
+def cmd_info(cur, start, pkgname):
+    """Print package information for pkgname"""
+    cur.execute(
+        "SELECT origin, version, repopath, comment FROM packages WHERE name IS ?",
+        (pkgname,),
+    )
+    try:
+        origin, version, repopath, comment = cur.fetchone()
+        print(f"Name: {pkgname}")
+        print(f"Version: {version}")
+        print(f"Location in repository: {repopath}")
+        print(f"Origin: {origin}")
+        print(f"Comment: {comment}")
+    except TypeError:
+        print(f"# package “{pkgname}” does not exist.")
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
+
+def cmd_show(cur, start, pkgname):
+    """Print package information and dependencies for pkgname"""
+    cur.execute(
+        "SELECT origin, version, repopath, comment FROM packages WHERE name IS ?",
+        (pkgname,),
+    )
+    try:
+        origin, version, repopath, comment = cur.fetchone()
+        print(f"Name: {pkgname}")
+        print(f"Version: {version}")
+        print(f"Location in repository: {repopath}")
+        print(f"Origin: {origin}")
+        print(f"Comment: {comment}")
+        print("---------------------")
+        print("Packages to retrieve:")
         rps = deps(cur, pkgname)
         alldeps = [
             cur.execute("SELECT repopath FROM packages WHERE rowid IS ?", d).fetchone()
-            for d in rps if d != (-1,)
+            for d in rps
         ]
         for rp in alldeps:
             pkgname = rp[0].split("/")[-1]
-            if not os.path.exists("packages/" + pkgname):
-                download(rp[0])
+            if not os.path.exists(PKGDIR + pkgname):
+                print(rp[0])
             else:
                 print(f"# skipping {pkgname}, already exists.")
-        duration = time.monotonic() - start
-        print(f"# duration: {duration:.3f} s")
+    except TypeError:
+        print(f"# package “{pkgname}” does not exist.")
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
+
+def cmd_get(cur, start, pkgname):
+    """Retrieve package and dependencies for pkgname"""
+    print("Retrieving packages:")
+    rps = deps(cur, pkgname)
+    alldeps = [
+        cur.execute("SELECT repopath FROM packages WHERE rowid IS ?", d).fetchone()
+        for d in rps
+        if d != (-1,)
+    ]
+    for rp in alldeps:
+        pkgname = rp[0].split("/")[-1]
+        if not os.path.exists(PKGDIR + pkgname):
+            download(rp[0])
+        else:
+            print(f"# skipping {pkgname}, already exists.")
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
+
+def cmd_leaves(cur, start):
+    """Print those names from PKGDIR which are not depended on."""
+    allpkgs = set(cur.execute("SELECT rowid FROM packages").fetchall())
+    are_deps = set(cur.execute("SELECT depid FROM deps"))
+    leaves = allpkgs - are_deps
+    leafnames = sorted(
+        cur.execute("SELECT repopath FROM packages WHERE rowid IS ?", p)
+        .fetchone()[0]
+        .split("/")[-1]
+        for p in leaves
+    )
+    for p in leafnames:
+        if os.path.exists(PKGDIR + p):
+            print(p)
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
 
 
 def contains(cur, s):
