@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-10-19T13:19:12+0200
+# Last modified: 2022-10-25T20:21:35+0200
 
 import functools
 import glob
@@ -21,7 +21,7 @@ REL = "quarterly"
 PKGDIR = "packages/"  # must end with path separator.
 
 # Supported commands
-cmds = ["list", "show", "contains", "get", "info", "leaves"]
+cmds = ["list", "show", "contains", "get", "info", "leaves", "upgrade"]
 
 
 def main():  # noqa
@@ -51,6 +51,8 @@ def main():  # noqa
         cmd_get(cur, start, pkgname)
     elif cmd == "leaves":
         cmd_leaves(cur, start)
+    elif cmd == "upgrade":
+        cmd_upgrade(cur, start)
 
 
 def cmd_list(cur, start):
@@ -163,6 +165,23 @@ def cmd_leaves(cur, start):
         print(p)
     duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
+
+
+def cmd_upgrade(cur, start):
+    """Upgrade existing packages."""
+    for pkgname in glob.glob("packages/*.pkg"):
+        name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
+        dbver, repopath = cur.execute(
+            "SELECT version, repopath FROM packages WHERE name==?", 
+            (name,)
+        ).fetchone()
+        if dbver != curver:
+            print(f"# Removing old package “{pkgname}”")
+            os.remove(pkgname)
+            download(repopath)
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
 
 
 def contains(cur, s):
