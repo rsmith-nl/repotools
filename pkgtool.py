@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-10-25T20:21:35+0200
+# Last modified: 2022-11-06T10:30:15+0100
 
 import functools
 import glob
@@ -171,17 +171,20 @@ def cmd_upgrade(cur, start):
     """Upgrade existing packages."""
     for pkgname in glob.glob("packages/*.pkg"):
         name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
-        dbver, repopath = cur.execute(
-            "SELECT version, repopath FROM packages WHERE name==?", 
-            (name,)
-        ).fetchone()
+        try:
+            dbver, repopath = cur.execute(
+                "SELECT version, repopath FROM packages WHERE name==?",
+                (name,)
+            ).fetchone()
+        except TypeError:
+            print(f"# package {name} not in database.")
+            continue
         if dbver != curver:
             print(f"# Removing old package “{pkgname}”")
             os.remove(pkgname)
             download(repopath)
     duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
-
 
 
 def contains(cur, s):
