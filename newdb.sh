@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-11-06T11:02:30+0100
-# Last modified: 2022-11-07T23:41:02+0100
+# Last modified: 2022-12-04T12:27:04+0100
 
 curl --silent http://pkg.freebsd.org/freebsd:13:x86:64/quarterly/packagesite.txz | \
 tar -xOf - packagesite.yaml > new.yaml
@@ -16,6 +16,10 @@ if [ $DIFFRESULT -eq 1 ]; then
     NEWNAME=`ls -l -D '%Y%m%d' packagesite.yaml | awk '{printf "%s-%s", $6, $7}'`
     mv -f packagesite.yaml $NEWNAME
     mv new.yaml packagesite.yaml
+    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:13:x86:64/quarterly/packagesite.txz
+    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:13:x86:64/quarterly/meta.conf
+    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:13:x86:64/quarterly/meta.txz
+
     echo "Package database has been updated"
     chmod 400 packagesite.yaml
     ./makedb.py
