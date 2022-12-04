@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-11-06T10:30:15+0100
+# Last modified: 2022-12-04T12:34:30+0100
 
 import functools
 import glob
@@ -18,7 +18,7 @@ import time
 # Configuration
 ABI = "FreeBSD:13:amd64"
 REL = "quarterly"
-PKGDIR = "packages/"  # must end with path separator.
+PKGDIR = "repo/All/"  # must end with path separator.
 
 # Supported commands
 cmds = ["list", "show", "contains", "get", "info", "leaves", "upgrade"]
@@ -144,7 +144,7 @@ def cmd_get(cur, start, pkgname):
 def cmd_leaves(cur, start):
     """Print those names from PKGDIR which are not depended on."""
     pkgdict = dict(cur.execute("SELECT repopath, rowid FROM packages"))
-    presentnames = [j.replace("packages/", "All/") for j in glob.glob(PKGDIR + "*.pkg")]
+    presentnames = [j.replace(PKGDIR, "All/") for j in glob.glob(PKGDIR + "*.pkg")]
     presentpkgs = set((pkgdict[n],) for n in presentnames)
     leaves = set()
     for p in presentpkgs:
@@ -169,7 +169,7 @@ def cmd_leaves(cur, start):
 
 def cmd_upgrade(cur, start):
     """Upgrade existing packages."""
-    for pkgname in glob.glob("packages/*.pkg"):
+    for pkgname in glob.glob(PKGDIR + "*.pkg"):
         name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
         try:
             dbver, repopath = cur.execute(
@@ -231,7 +231,7 @@ def download(repopath):
         "curl",
         "-s",
         "--output-dir",
-        "packages",
+        PKGDIR,
         "-O",
         f"http://pkg.freebsd.org/{ABI}/{REL}/" + repopath,
     ]
