@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2022-12-17T22:36:46+0100
+# Last modified: 2023-01-09T20:28:58+0100
 
 import functools
 import glob
@@ -21,7 +21,7 @@ REL = "quarterly"
 PKGDIR = "repo/All/"  # must end with path separator.
 
 # Supported commands
-cmds = ["list", "show", "contains", "get", "info", "leaves", "upgrade"]
+cmds = ["list", "show", "contains", "get", "info", "leaves", "upgrade", "show-upgrade"]
 
 
 def main():  # noqa
@@ -53,6 +53,8 @@ def main():  # noqa
         cmd_leaves(cur, start)
     elif cmd == "upgrade":
         cmd_upgrade(cur, start)
+    elif cmd == "show-upgrade":
+        cmd_show_upgrade(cur, start)
 
 
 def cmd_list(cur, start):
@@ -184,6 +186,24 @@ def cmd_upgrade(cur, start):
             print(f"# Removing old package “{pkgname}”")
             os.remove(pkgname)
             download(repopath)
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
+
+def cmd_show_upgrade(cur, start):
+    """Show which existing packages would be upgraded."""
+    for pkgname in glob.glob(PKGDIR + "*.pkg"):
+        name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
+        try:
+            dbver, repopath = cur.execute(
+                "SELECT version, repopath FROM packages WHERE name==?",
+                (name,)
+            ).fetchone()
+        except TypeError:
+            print(f"# package {name} not in database.")
+            continue
+        if dbver != curver:
+            print(f"# package “{name}”; {curver} → {dbver}")
     duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
 
