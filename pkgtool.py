@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-04-10T17:50:23+0200
+# Last modified: 2023-04-10T18:43:07+0200
 
 import functools
 import glob
@@ -21,7 +21,17 @@ REL = "quarterly"
 PKGDIR = "repo/All/"  # must end with path separator.
 
 # Supported commands
-cmds = ["list", "show", "contains", "get", "info", "leaves", "upgrade", "show-upgrade"]
+cmds = [
+    "list",
+    "show",
+    "contains",
+    "get",
+    "info",
+    "leaves",
+    "upgrade",
+    "show-upgrade",
+    "refresh",
+]
 
 
 def main():  # noqa
@@ -55,6 +65,8 @@ def main():  # noqa
         cmd_upgrade(cur, start)
     elif cmd == "show-upgrade":
         cmd_show_upgrade(cur, start)
+    elif cmd == "refresh":
+        cmd_refresh(cur, start)
 
 
 def cmd_list(cur, start):
@@ -143,6 +155,34 @@ def cmd_get(cur, start, pkgname):
     print(f"# duration: {duration:.3f} s")
 
 
+def cmd_refresh(cur, start):
+    """Refresh all existing packages."""
+    presentnames = [
+        j.replace(PKGDIR, "").rsplit("-", maxsplit=1)[0]
+        for j in glob.glob(PKGDIR + "*.pkg")
+    ]
+    for pkgname in presentnames:
+        print(f"Refreshing {pkgname}")
+        try:
+            rps = deps(cur, pkgname)
+        except ValueError:
+            print(f"# skipping {pkgname}, not in database")
+            continue
+        alldeps = [
+            cur.execute("SELECT repopath FROM packages WHERE rowid IS ?", d).fetchone()
+            for d in rps
+            if d != (-1,)
+        ]
+        for rp in alldeps:
+            rpkgname = rp[0].split("/")[-1]
+            if not os.path.exists(PKGDIR + rpkgname):
+                download(rp[0])
+            # else:
+            # print(f"# skipping {rpkgname}, already exists.")
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
+
 def cmd_leaves(cur, start):
     """Print those names from PKGDIR which are not depended on."""
     pkgdict = dict(cur.execute("SELECT repopath, rowid FROM packages"))
@@ -177,8 +217,7 @@ def cmd_upgrade(cur, start):
         name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
         try:
             dbver, repopath, dbsize = cur.execute(
-                "SELECT version, repopath, pkgsize FROM packages WHERE name==?",
-                (name,)
+                "SELECT version, repopath, pkgsize FROM packages WHERE name==?", (name,)
             ).fetchone()
         except TypeError:
             print(f"# package {name} not in database.")
@@ -198,8 +237,7 @@ def cmd_show_upgrade(cur, start):
         name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
         try:
             dbver, repopath, dbsize = cur.execute(
-                "SELECT version, repopath, pkgsize FROM packages WHERE name==?",
-                (name,)
+                "SELECT version, repopath, pkgsize FROM packages WHERE name==?", (name,)
             ).fetchone()
         except TypeError:
             print(f"# package {name} not in database.")
