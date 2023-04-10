@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-01-09T20:28:58+0100
+# Last modified: 2023-04-10T17:50:23+0200
 
 import functools
 import glob
@@ -173,16 +173,17 @@ def cmd_leaves(cur, start):
 def cmd_upgrade(cur, start):
     """Upgrade existing packages."""
     for pkgname in glob.glob(PKGDIR + "*.pkg"):
+        cursize = os.path.getsize(pkgname)
         name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
         try:
-            dbver, repopath = cur.execute(
-                "SELECT version, repopath FROM packages WHERE name==?",
+            dbver, repopath, dbsize = cur.execute(
+                "SELECT version, repopath, pkgsize FROM packages WHERE name==?",
                 (name,)
             ).fetchone()
         except TypeError:
             print(f"# package {name} not in database.")
             continue
-        if dbver != curver:
+        if dbver != curver or dbsize != cursize:
             print(f"# Removing old package “{pkgname}”")
             os.remove(pkgname)
             download(repopath)
@@ -193,17 +194,20 @@ def cmd_upgrade(cur, start):
 def cmd_show_upgrade(cur, start):
     """Show which existing packages would be upgraded."""
     for pkgname in glob.glob(PKGDIR + "*.pkg"):
+        cursize = os.path.getsize(pkgname)
         name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
         try:
-            dbver, repopath = cur.execute(
-                "SELECT version, repopath FROM packages WHERE name==?",
+            dbver, repopath, dbsize = cur.execute(
+                "SELECT version, repopath, pkgsize FROM packages WHERE name==?",
                 (name,)
             ).fetchone()
         except TypeError:
             print(f"# package {name} not in database.")
             continue
         if dbver != curver:
-            print(f"# package “{name}”; {curver} → {dbver}")
+            print(f"# VERSION package “{name}”; {curver} → {dbver}")
+        elif dbsize != cursize:
+            print(f"# SIZE package “{name}”; {cursize} → {dbsize}")
     duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
 
