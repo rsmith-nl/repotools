@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-07-07T17:57:28+0200
+# Last modified: 2023-07-07T20:02:59+0200
 
 import functools
 import glob
@@ -52,6 +52,9 @@ def main():  # noqa
         for a, b in zip(cmds, help):
             print(f"* {a:8}: {b}.")
         sys.exit(0)
+    if not os.path.isdir(PKGDIR):
+        print(f"Error: “{PKGDIR}” not found in the current working directory.")
+        sys.exit(1)
     cmd = args[0]
     pkgname = args[1] if len(args) > 1 else ""
 
