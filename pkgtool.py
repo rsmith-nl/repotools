@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-04-10T18:43:07+0200
+# Last modified: 2023-07-07T17:57:28+0200
 
 import functools
 import glob
@@ -32,7 +32,16 @@ cmds = [
     "show-upgrade",
     "refresh",
 ]
-
+help = [
+    "show all available packages",
+    "show what would be downloaded for a given package name",
+    "print the names of packages that contain the given string",
+    "download the given package, plus any required dependencies",
+    "show information about a named package",
+    "show all packages that are not depended on",
+    "download any packages where the version or package size has changed",
+    "for every packages test if the requirements are met and get missing packages",
+]
 
 def main():  # noqa
     start = time.monotonic()
@@ -40,6 +49,8 @@ def main():  # noqa
     args = sys.argv[1:]
     if len(args) == 0 or args[0] not in cmds:
         print(f"usage: {sys.argv[0]} {'|'.join(cmds)} pkgname")
+        for a, b in zip(cmds, help):
+            print(f"* {a:8}: {b}.")
         sys.exit(0)
     cmd = args[0]
     pkgname = args[1] if len(args) > 1 else ""
@@ -302,6 +313,8 @@ def download(repopath):
     cp = sp.run(args)
     if cp.returncode != 0:
         print(f"failed, code {cp.returncode}")
+    # Make packages readable for everyone.
+    os.chmod(PKGDIR + repopath, 0o0644)
     print("done")
 
 
