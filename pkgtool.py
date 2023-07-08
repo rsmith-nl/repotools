@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-07-07T20:02:59+0200
+# Last modified: 2023-07-08T21:14:38+0200
 
 import functools
 import glob
@@ -317,7 +317,7 @@ def download(repopath):
     if cp.returncode != 0:
         print(f"failed, code {cp.returncode}")
     # Make packages readable for everyone.
-    os.chmod(PKGDIR + repopath, 0o0644)
+    os.chmod(PKGDIR[:-4] + repopath, 0o0644)
     print("done")
 
 
