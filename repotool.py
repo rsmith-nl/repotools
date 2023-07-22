@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# file: pkgtool.py
+# file: repotool.py
 # vim:fileencoding=utf-8:fdm=marker:ft=python
 #
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-07-08T21:14:38+0200
+# Last modified: 2023-07-22T12:06:27+0200
 
 import functools
 import glob
