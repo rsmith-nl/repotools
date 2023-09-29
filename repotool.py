@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-09-29T09:31:10+0200
+# Last modified: 2023-09-29T12:19:25+0200
 
 import functools
 import glob
@@ -66,7 +66,8 @@ def main():  # noqa
     cmd = args[0]
     pkgname = args[1] if len(args) > 1 else ""
 
-    # Load database
+    # Load database.
+    # See makedb.py for the database definition.
     db = sqlite3.connect("packagesite.db")
     cur = db.cursor()
 
