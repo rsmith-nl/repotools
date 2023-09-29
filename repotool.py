@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-09-29T09:29:06+0200
+# Last modified: 2023-09-29T09:30:15+0200
 
 import functools
 import glob
@@ -47,7 +47,7 @@ help = [
 
 def main():  # noqa
     start = time.monotonic()
-    # change directory
+    # Change directory
     try:
         os.chdir(REPODIR)
     except FileNotFoundError as e:
