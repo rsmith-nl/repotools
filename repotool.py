@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-07-22T12:54:28+0200
+# Last modified: 2023-09-29T08:40:36+0200
 
 import functools
 import glob
@@ -18,6 +18,7 @@ import time
 # Configuration
 ABI = "FreeBSD:13:amd64"
 REL = "quarterly"
+REPODIR = "/home/rsmith/freebsd-quarterly"
 PKGDIR = "repo/All/"  # must end with path separator.
 
 # Supported commands
@@ -46,6 +47,11 @@ help = [
 
 def main():  # noqa
     start = time.monotonic()
+    # change directory
+    try:
+        os.chdir(REPODIR)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
     # Handle arguments
     args = sys.argv[1:]
     if len(args) == 0 or args[0] not in cmds:
@@ -54,7 +60,7 @@ def main():  # noqa
             print(f"* {a:8}: {b}.")
         sys.exit(0)
     if not os.path.isdir(PKGDIR):
-        print(f"Error: “{PKGDIR}” not found in the current working directory.")
+        print(f"Error: “{PKGDIR}” not found in “{REPODIR}”.")
         sys.exit(1)
     cmd = args[0]
     pkgname = args[1] if len(args) > 1 else ""
