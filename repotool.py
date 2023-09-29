@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-09-29T08:40:36+0200
+# Last modified: 2023-09-29T09:29:06+0200
 
 import functools
 import glob
@@ -91,6 +91,13 @@ def main():  # noqa
 
 
 def cmd_list(cur, start):
+    """
+    List all available packages.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+    """
     cur.execute("SELECT repopath FROM packages ORDER BY repopath ASC")
     for j in cur.fetchall():
         print(j[0][4:])
@@ -99,7 +106,14 @@ def cmd_list(cur, start):
 
 
 def cmd_contains(cur, start, pkgname):
-    """Show packages whose name contains pkgname"""
+    """
+    Show packages whose name contains pkgname
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+        pkgname (str): Fragment to search for in the package name.
+    """
     for p in contains(cur, pkgname):
         print(p)
     duration = time.monotonic() - start
@@ -107,7 +121,14 @@ def cmd_contains(cur, start, pkgname):
 
 
 def cmd_info(cur, start, pkgname):
-    """Print package information for pkgname"""
+    """
+    Print package information for pkgname
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+        pkgname (str): Fragment to search for in the package name.
+    """
     cur.execute(
         "SELECT origin, version, repopath, comment FROM packages WHERE name IS ?",
         (pkgname,),
@@ -126,7 +147,14 @@ def cmd_info(cur, start, pkgname):
 
 
 def cmd_show(cur, start, pkgname):
-    """Print package information and dependencies for pkgname"""
+    """
+    Print package information and dependencies for pkgname
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+        pkgname (str): Name of the package.
+    """
     cur.execute(
         "SELECT origin, version, repopath, comment FROM packages WHERE name IS ?",
         (pkgname,),
@@ -158,7 +186,14 @@ def cmd_show(cur, start, pkgname):
 
 
 def cmd_get(cur, start, pkgname):
-    """Retrieve package and dependencies for pkgname"""
+    """
+    Retrieve package and dependencies for pkgname
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+        pkgname (str): Name of the package.
+    """
     print("Retrieving packages:")
     rps = deps(cur, pkgname)
     alldeps = [
@@ -177,7 +212,13 @@ def cmd_get(cur, start, pkgname):
 
 
 def cmd_refresh(cur, start):
-    """Refresh all existing packages."""
+    """
+    Refresh (update all dependencies) of existing packages.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+    """
     presentnames = [
         j.replace(PKGDIR, "").rsplit("-", maxsplit=1)[0]
         for j in glob.glob(PKGDIR + "*.pkg")
@@ -205,7 +246,13 @@ def cmd_refresh(cur, start):
 
 
 def cmd_leaves(cur, start):
-    """Print those names from PKGDIR which are not depended on."""
+    """
+    Print those names from PKGDIR which are not depended on.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+    """
     pkgdict = dict(cur.execute("SELECT repopath, rowid FROM packages"))
     presentnames = [j.replace(PKGDIR, "All/") for j in glob.glob(PKGDIR + "*.pkg")]
     presentpkgs = set((pkgdict.get(n),) for n in presentnames)
@@ -232,7 +279,13 @@ def cmd_leaves(cur, start):
 
 
 def cmd_upgrade(cur, start):
-    """Upgrade existing packages."""
+    """
+    Upgrade existing packages.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+    """
     for pkgname in glob.glob(PKGDIR + "*.pkg"):
         cursize = os.path.getsize(pkgname)
         name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
@@ -252,7 +305,13 @@ def cmd_upgrade(cur, start):
 
 
 def cmd_show_upgrade(cur, start):
-    """Show which existing packages would be upgraded."""
+    """
+    Show which existing packages would be upgraded.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+    """
     for pkgname in glob.glob(PKGDIR + "*.pkg"):
         cursize = os.path.getsize(pkgname)
         name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
@@ -310,7 +369,12 @@ def deps(cur, name):
 
 
 def download(repopath):
-    """Download the package named via the repopath"""
+    """
+    Download package.
+
+    Arguments:
+        repopath (str): Name of the package to download.
+    """
     args = [
         "curl",
         "-s",
