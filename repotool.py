@@ -5,10 +5,11 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-09-29T12:19:25+0200
+# Last modified: 2023-10-08T17:25:40+0200
 
 import functools
 import glob
+import json
 import os
 import sqlite3
 import subprocess as sp
@@ -45,6 +46,7 @@ help = [
     "for every package, check and update the requirements.",
 ]
 
+
 def main():  # noqa
     start = time.monotonic()
     # Change directory
@@ -65,6 +67,9 @@ def main():  # noqa
         sys.exit(2)
     cmd = args[0]
     pkgname = args[1] if len(args) > 1 else ""
+
+    # Check if other important repotool jobs are running.
+    check_running()
 
     # Load database.
     # See makedb.py for the database definition.
@@ -392,6 +397,23 @@ def download(repopath):
     # Make packages readable for everyone.
     os.chmod(PKGDIR[:-4] + repopath, 0o0644)
     print("done")
+
+
+def check_running():
+    """Check if an important command is already running. If so, exit."""
+    ourpid = str(os.getpid())
+    psdata = sp.check_output(["ps", "--libxo=json"]).decode("utf-8")
+    procs = json.loads(psdata)["process-information"]["process"]
+    del psdata
+    for pid, terminal_name, state, cpu_time, command in procs:
+        if pid == ourpid:
+            continue
+        if "repotool" not in command:
+            continue
+        if " upgrade" in command or "refresh" in command:
+            print("Upgrade or refresh in progress.", end=" ")
+            print(f"Process {pid}, terminal {terminal_name}; exiting.")
+            sys.exit(3)
 
 
 if __name__ == "__main__":
