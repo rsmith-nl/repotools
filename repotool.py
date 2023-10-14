@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-10-08T17:25:40+0200
+# Last modified: 2023-10-14T23:11:29+0200
 
 import functools
 import glob
@@ -20,7 +20,8 @@ import time
 ABI = "FreeBSD:13:amd64"
 REL = "quarterly"
 REPODIR = "/home/rsmith/freebsd-quarterly"
-PKGDIR = "repo/All/"  # must end with path separator.
+REPO = "repo/"
+PKGDIR = REPO + "All/"  # must end with path separator.
 
 # Supported commands
 cmds = [
@@ -28,6 +29,7 @@ cmds = [
     "show",
     "contains",
     "get",
+    "delete",
     "info",
     "leaves",
     "upgrade",
@@ -39,6 +41,7 @@ help = [
     "show what would be downloaded for a given package name",
     "print the names of packages that contain the given string",
     "download the given package, plus any required dependencies",
+    "delete a package if it is unused, plus any unused dependencies",
     "show information about a named package",
     "show all packages that are not depended on",
     "download any packages where the version or package size has changed",
@@ -87,6 +90,8 @@ def main():  # noqa
         cmd_show(cur, start, pkgname)
     elif cmd == "get":
         cmd_get(cur, start, pkgname)
+    elif cmd == "delete":
+        cmd_delete(cur, start, pkgname)
     elif cmd == "leaves":
         cmd_leaves(cur, start)
     elif cmd == "upgrade":
@@ -216,6 +221,61 @@ def cmd_get(cur, start, pkgname):
             print(f"# skipping {pkgname}, already exists.")
     duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
+
+
+def cmd_delete(cur, start, pkgname):
+    """
+    Delete a package if it is not depended on.
+    Also delete all requirements that are not depended on by others.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+        pkgname (str): Name of the package.
+    """
+
+    def duration():
+        duration = time.monotonic() - start
+        print(f"# duration: {duration:.3f} s")
+
+    # Get the row id and path in the repo of the package
+    rv = cur.execute(
+        "SELECT rowid, repopath FROM packages WHERE name is ?", (pkgname,)
+    ).fetchone()
+    if rv is None:
+        print(f"# package “{pkgname}” is not in the database")
+        duration()
+        return
+    rowid, repopath = rv
+    if not os.path.exists(REPO + repopath):
+        print(f"# package “{pkgname}” is not in the repo")
+        duration()
+        return
+    # Get all the rowids that depend on this package.
+    # Note that those packages might or might not actually be there!
+    dependers = cur.execute(
+        "SELECT name, repopath, rowid FROM packages WHERE rowid IN "
+        "(SELECT pkgid FROM deps WHERE depid IS ?)",
+        rowid,
+    ).fetchall()
+    # Narrow the selection down to other packages that actually exist
+    existing_dependers = [
+        (name, rowid)
+        for name, repopath, rowid in dependers
+        if os.path.exists(REPO + repopath)
+    ]
+    if existing_dependers:
+        print(f"# package “{pkgname}” cannot be deleted, following packages require it:")
+        for name, _ in existing_dependers:
+            print(f"#  {name}")
+        duration()
+        return
+    # TODO: Delete the package.
+    # TODO: Gather the dependencies.
+    # TODO: Recursively delete them if they have no other packages that depend on
+    # them.
+
+    duration()
 
 
 def cmd_refresh(cur, start):
