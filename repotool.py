@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-11-05T21:36:37+0100
+# Last modified: 2023-11-05T22:22:00+0100
 
 import functools
 import glob
@@ -256,7 +256,7 @@ def cmd_delete(cur, start, pkgname):
     dependers = cur.execute(
         "SELECT name, repopath, rowid FROM packages WHERE rowid IN "
         "(SELECT pkgid FROM deps WHERE depid IS ?)",
-        rowid,
+        (rowid,)
     ).fetchall()
     # Narrow the selection down to other packages that actually exist
     existing_dependers = [
@@ -270,10 +270,13 @@ def cmd_delete(cur, start, pkgname):
             print(f"#  {name}")
         duration()
         return
+    else:
+        print(f"# package “{pkgname}” is not depended on, so it can be deleted.")
+    dependencies = deps(cur, pkgname)
+    print(f"# found {len(dependencies)} dependencies.")
     # TODO: Delete the package.
-    # TODO: Gather the dependencies.
-    # TODO: Recursively delete them if they have no other packages that depend on
-    # them.
+    # TODO: Recursively delete dependencies if they have no other packages
+    # that depend on them.
 
     duration()
 
