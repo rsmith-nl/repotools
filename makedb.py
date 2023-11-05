@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2022-10-15T12:23:25+0200
+# Last modified: 2023-11-05T21:30:15+0100
 
 import json
 import os
@@ -93,8 +93,10 @@ for pkg in packages:  # noqa
     if "annotations" in pkg:
         for k, v in pkg["annotations"].items():
             cur.execute("INSERT INTO annotations VALUES (?, ?, ?)", (pkgid, k, v))
+print("done.")
 
 # Only after all packages have been ID'd can we resolve deps.
+print("Resolving dependencies... ", end="")
 for pkg in packages:
     if "deps" in pkg:
         for depname, depdata in pkg["deps"].items():
@@ -108,8 +110,7 @@ for pkg in packages:
                 "INSERT INTO deps VALUES (?, ?, ?, ?, ?)",
                 (idbyname[pkg["name"]], depname, deporig, depver, depid),
             )
-
-print(f"{pkgid} done.")
+print("done.")
 db.commit()
 db.close()
 runtime = time.monotonic() - start
