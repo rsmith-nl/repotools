@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-10-14T23:11:29+0200
+# Last modified: 2023-11-05T21:36:37+0100
 
 import functools
 import glob
@@ -470,8 +470,8 @@ def check_running():
             continue
         if "repotool" not in command:
             continue
-        if " upgrade" in command or "refresh" in command:
-            print("Upgrade or refresh in progress.", end=" ")
+        if any(j in command for j in ("upgrade", "refresh", "delete")):
+            print("Upgrade, refresh or delete in progress.", end=" ")
             print(f"Process {pid}, terminal {terminal_name}; exiting.")
             sys.exit(3)
 
