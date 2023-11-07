@@ -256,7 +256,7 @@ def cmd_delete(cur, start, pkgname):
     dependers = cur.execute(
         "SELECT name, repopath, rowid FROM packages WHERE rowid IN "
         "(SELECT pkgid FROM deps WHERE depid IS ?)",
-        (rowid,)
+        (rowid,),
     ).fetchall()
     # Narrow the selection down to other packages that actually exist
     existing_dependers = [
@@ -265,7 +265,9 @@ def cmd_delete(cur, start, pkgname):
         if os.path.exists(REPO + repopath)
     ]
     if existing_dependers:
-        print(f"# package “{pkgname}” cannot be deleted, following packages require it:")
+        print(
+            f"# package “{pkgname}” cannot be deleted, following packages require it:"
+        )
         for name, _ in existing_dependers:
             print(f"#  {name}")
         duration()
