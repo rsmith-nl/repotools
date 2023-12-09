@@ -7,14 +7,13 @@
 #
 # Author: R.F. Smith <rsmith@xs4all.nl>
 # Created: 2018-01-21 22:44:51 +0100
-# Last modified: 2023-11-07T22:36:13+0100
+# Last modified: 2023-12-09T22:00:26+0100
 .POSIX:
 .PHONY: help clean check format uninstall zip
 .SUFFIXES:
 
 PROJECT:=repotools
 REPODIR:=${HOME}/freebsd-quarterly
-BINDIR!=python -c 'import sysconfig; print(sysconfig.get_path("scripts", "posix_user"))'
 
 .if make(zip)
 TAGCOMMIT!=git rev-list --tags --max-count=1
@@ -37,7 +36,7 @@ check:: .IGNORE ## Run the pylama code checker
 format:: ## Reformat all source code using black
 	black makedb.py repotool.py
 
-install: ${BINDIR}/repotool ${REPODIR}/makedb ${REPODIR}/newdb  ## Install the programs
+install: ${REPODIR}/repotool ${REPODIR}/makedb ${REPODIR}/newdb  ## Install the programs
 
 ${REPODIR}/makedb: makedb.py
 	install -m 700 makedb.py ${REPODIR}/makedb
@@ -45,11 +44,11 @@ ${REPODIR}/makedb: makedb.py
 ${REPODIR}/newdb: newdb.sh
 	install -m 700 newdb.sh ${REPODIR}/newdb
 
-${BINDIR}/repotool: repotool.py
-	install -m 700 repotool.py ${BINDIR}/repotool
+${REPODIR}/repotool: repotool.py
+	install -m 700 repotool.py ${REPODIR}/repotool
 
 uninstall::  ## Remove the programs
-	rm -f ${BINDIR}/repotool
+	rm -f ${REPODIR}/repotool
 	rm -f ${REPODIR}/makedb
 	rm -f ${REPODIR}/newdb
 

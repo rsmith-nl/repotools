@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-11-05T22:22:00+0100
+# Last modified: 2023-12-09T22:00:37+0100
 
 import functools
 import glob
@@ -17,7 +17,7 @@ import sys
 import time
 
 # Configuration
-ABI = "FreeBSD:13:amd64"
+ABI = "FreeBSD:14:amd64"
 REL = "quarterly"
 REPODIR = "/home/rsmith/freebsd-quarterly"
 REPO = "repo/"
