@@ -2,19 +2,22 @@ Scripts for interacting with FreeBSD package repositories
 #########################################################
 
 :date: 2022-10-15
-:tags: 
+:tags: FreeBSD
 :author: Roland Smith
 
-.. Last modified: 2023-12-28T06:21:48+0100
+.. Last modified: 2023-12-28T06:28:27+0100
 .. vim:spelllang=en
 
-For updating several machines to FreeBSD 13.1 (amd64) I wanted to download all the
-packages I need beforehand without installing them.
+For updating several machines to a new version of FreeBSD I wanted to download
+all the packages I need beforehand without installing them.
 
 Since I could not find a way to do that using ``pkg``, I wrote my own tools.
 
 It can be used for other versions, architectures and releases by editing the
 configuration variables at the begin of ``repotool.py``
+
+It is now used as an offline cache for all the packages that I use on my
+machines.
 
 .. PELICAN_END_SUMMARY
 
