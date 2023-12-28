@@ -5,7 +5,7 @@ Scripts for interacting with FreeBSD package repositories
 :tags: 
 :author: Roland Smith
 
-.. Last modified: 2023-11-05T21:24:48+0100
+.. Last modified: 2023-12-28T06:21:48+0100
 .. vim:spelllang=en
 
 For updating several machines to FreeBSD 13.1 (amd64) I wanted to download all the
@@ -53,6 +53,16 @@ These tables have the following definitions.
     CREATE TABLE options (pkgid INT, key TEXT, value TEXT);
     CREATE TABLE annotations (pkgid INT, key TEXT, value TEXT);
 
+Note that these table have an automatic row-id that is the primary
+identification for each row.
+
+The ``packages`` table speaks for itself. It is the primary source of
+information about packages.
+The other tables are basically to provide multiple pieces of information about
+each row in the packages table.
+That is why they all have an integer named ``pkgid`` as the first item in the
+row; that is the row-id in the ``packages`` table that they belong to.
+
 
 repotool
 --------
@@ -64,14 +74,21 @@ It reads ``packagesite.db`` and then carries out one of the following
 commands:
 
 * ``list``: List all the packages in ``packagesite.db``.
-* ``contains <string>``: List all the packages that have the given string in
-  their name.
-* ``info <pkgname>``: When given a valid package name (without version), it
-  produces information about this package
 * ``show <pkgname>``: When given a valid package name (without version), it
   produces information about this package and shows the package and all its
   dependencies that would be downloaded if they weren't already in the
   ``packages/`` directory.
+* ``contains <string>``: List all the packages that have the given string in
+  their name.
 * ``get <pkgname>``: When given a valid package name (without version),
   download the package and *all* its dependencies unless they already exist in
   in the ``packages/`` directory.
+* ``delete <pkgname>``: Delete a package when no other package depends on it.
+* ``info <pkgname>``: When given a valid package name (without version), it
+  produces information about this package
+* ``leaves``: show all the packages that are not depended on.
+* ``upgrade``: Brings the contents of the repo up-to-date with the database.
+  Retrieves packages whose size or version has changed.
+* ``show-upgrade``: Show what would be done if ``upgrade`` was used.
+* ``refresh``: For every package, check and update the requirements.
+
