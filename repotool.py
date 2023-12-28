@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-12-09T22:00:37+0100
+# Last modified: 2023-12-28T06:24:05+0100
 
 import functools
 import glob
@@ -45,8 +45,8 @@ help = [
     "show information about a named package",
     "show all packages that are not depended on",
     "download any packages where the version or package size has changed",
-    "for every package, test if the requirements are met and get missing packages",
-    "for every package, check and update the requirements.",
+    "show what would be done if upgrade were called",
+    "for every package, check and update the requirements",
 ]
 
 
