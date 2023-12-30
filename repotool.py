@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-12-28T06:24:05+0100
+# Last modified: 2023-12-30T15:20:01+0100
 
 import functools
 import glob
@@ -142,15 +142,16 @@ def cmd_info(cur, start, pkgname):
         pkgname (str): Fragment to search for in the package name.
     """
     cur.execute(
-        "SELECT origin, version, repopath, comment FROM packages WHERE name IS ?",
+        "SELECT origin, version, repopath, comment, www FROM packages WHERE name IS ?",
         (pkgname,),
     )
     try:
-        origin, version, repopath, comment = cur.fetchone()
+        origin, version, repopath, comment, www = cur.fetchone()
         print(f"Name: {pkgname}")
         print(f"Version: {version}")
         print(f"Location in repository: {repopath}")
         print(f"Origin: {origin}")
+        print(f"WWW: {www}")
         print(f"Comment: {comment}")
     except TypeError:
         print(f"# package “{pkgname}” does not exist.")
