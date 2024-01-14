@@ -5,9 +5,8 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2023-12-30T15:20:01+0100
+# Last modified: 2024-01-14T21:26:54+0100
 
-import functools
 import glob
 import json
 import os
@@ -419,26 +418,19 @@ def deps(cur, name):
 
     Returns: a list of rowids of dependencies.
     """
-
-    @functools.cache
-    def depbyrowid(cur, rowid):
-        if rowid == -1:
-            return set()
-        depids = cur.execute(
-            "SELECT depid FROM deps WHERE pkgid is ?", rowid
-        ).fetchall()
-        if not depids:
-            return set()
-        rv = set(depids)
-        for di in depids:
-            rv |= depbyrowid(cur, di)
-        return rv
-
     cur.execute("SELECT rowid FROM packages WHERE name IS ?", (name,))
     pkgid = cur.fetchone()
-    alldeps = list(depbyrowid(cur, pkgid))
-    alldeps.insert(0, pkgid)
-    return alldeps
+    alldeps = []
+    newdeps = [pkgid]
+    while len(newdeps) >= len(alldeps):
+        alldeps += [j for j in newdeps if j not in alldeps]
+        newdeps = cur.execute(
+            "SELECT DISTINCT depid FROM deps WHERE pkgid IN "
+            + "("
+            + ", ".join(str(j[0]) for j in alldeps)
+            + ")"
+        ).fetchall()
+    return list(set(alldeps))
 
 
 def download(repopath):
