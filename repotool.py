@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-01-14T21:26:54+0100
+# Last modified: 2024-01-14T21:31:34+0100
 
 import glob
 import json
@@ -430,7 +430,9 @@ def deps(cur, name):
             + ", ".join(str(j[0]) for j in alldeps)
             + ")"
         ).fetchall()
-    return list(set(alldeps))
+    rv = [pkgid]
+    rv += [j for j in alldeps if j not in rv]
+    return rv
 
 
 def download(repopath):
