@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-01-14T21:31:34+0100
+# Last modified: 2024-01-15T21:46:10+0100
 
 import glob
 import json
@@ -299,7 +299,7 @@ def cmd_refresh(cur, start):
         print(f"Refreshing {pkgname}")
         try:
             rps = deps(cur, pkgname)
-        except ValueError:
+        except (ValueError, TypeError):
             print(f"# skipping {pkgname}, not in database")
             continue
         alldeps = [
