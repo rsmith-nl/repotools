@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-11-06T11:02:30+0100
-# Last modified: 2023-12-11T20:54:47+0100
+# Last modified: 2024-04-19T09:45:07+0200
 
 echo -n "Downloading new package database... "
 curl --silent http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.txz | \
@@ -20,7 +20,9 @@ if [ $DIFFRESULT -eq 1 ]; then
     mv new.yaml packagesite.yaml
     echo -n "Updating package files... "
     curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.txz
-    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.pkg
+    cp -p repo/packagesite.txz repo/packagesite.pkg
+    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/data.txz
+    cp -p repo/data.txz repo/data.pkg
     curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/meta.txz
     echo "done."
     chmod 400 packagesite.yaml
