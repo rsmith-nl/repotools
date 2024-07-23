@@ -1,13 +1,13 @@
 # file: Makefile
 # vim:fileencoding=utf-8:fdm=marker:ft=make
 #
-# NOTE: This Makefile is only intended for developers.
+# NOTE: This Makefile is mainly intended for developers.
 #       It is only meant for UNIX-like operating systems.
 #       Most of the commands require extra software.
 #
 # Author: R.F. Smith <rsmith@xs4all.nl>
 # Created: 2018-01-21 22:44:51 +0100
-# Last modified: 2023-12-09T22:00:26+0100
+# Last modified: 2024-07-23T14:52:22+0200
 .POSIX:
 .PHONY: help clean check format uninstall zip
 .SUFFIXES:
