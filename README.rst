@@ -5,7 +5,7 @@ Scripts for interacting with FreeBSD package repositories
 :tags: FreeBSD
 :author: Roland Smith
 
-.. Last modified: 2023-12-28T06:28:27+0100
+.. Last modified: 2024-07-23T14:47:28+0200
 .. vim:spelllang=en
 
 For updating several machines to a new version of FreeBSD I wanted to download
@@ -94,4 +94,5 @@ commands:
   Retrieves packages whose size or version has changed.
 * ``show-upgrade``: Show what would be done if ``upgrade`` was used.
 * ``refresh``: For every package, check and update the requirements.
+* ``unused``: Shows the packages in the repo that are not installed.
 

@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-01-15T21:46:10+0100
+# Last modified: 2024-07-23T14:30:57+0200
 
 import glob
 import json
@@ -34,6 +34,7 @@ cmds = [
     "upgrade",
     "show-upgrade",
     "refresh",
+    "unused",
 ]
 help = [
     "show all available packages",
@@ -46,6 +47,7 @@ help = [
     "download any packages where the version or package size has changed",
     "show what would be done if upgrade were called",
     "for every package, check and update the requirements",
+    "show packages in the repo that are not installed"
 ]
 
 
@@ -99,6 +101,8 @@ def main():  # noqa
         cmd_show_upgrade(cur, start)
     elif cmd == "refresh":
         cmd_refresh(cur, start)
+    elif cmd == "unused":
+        cmd_unused(cur, start)
 
 
 def cmd_list(cur, start):
@@ -279,7 +283,6 @@ def cmd_delete(cur, start, pkgname):
     # TODO: Delete the package.
     # TODO: Recursively delete dependencies if they have no other packages
     # that depend on them.
-
     duration()
 
 
@@ -399,6 +402,24 @@ def cmd_show_upgrade(cur, start):
         elif dbsize != cursize:
             print(f"# SIZE package “{name}”; {cursize} → {dbsize}")
     duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
+
+def cmd_unused(cur, start):
+    """
+    Print those names from PKGDIR which are not depended on.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+    """
+    duration = time.monotonic() - start
+    pkgdata = sp.check_output(["pkg", "info"]).decode("utf-8")
+    installedpkgs = set(ln.split()[0] for ln in pkgdata.splitlines())
+    repopkgs = set(pkgname[9:-4] for pkgname in glob.glob(PKGDIR + "*.pkg"))
+    uninstalled = sorted(repopkgs - installedpkgs)
+    for pkg in uninstalled:
+        print(pkg)
     print(f"# duration: {duration:.3f} s")
 
 
