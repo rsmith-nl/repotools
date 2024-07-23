@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-07-23T14:30:57+0200
+# Last modified: 2024-07-23T14:50:44+0200
 
 import glob
 import json
@@ -18,7 +18,7 @@ import time
 # Configuration
 ABI = "FreeBSD:14:amd64"
 REL = "quarterly"
-REPODIR = "/home/rsmith/freebsd-quarterly"
+REPODIR = f"/home/{os.getenv('USER')}/freebsd-quarterly"
 REPO = "repo/"
 PKGDIR = REPO + "All/"  # must end with path separator.
 
