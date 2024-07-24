@@ -7,7 +7,7 @@
 #
 # Author: R.F. Smith <rsmith@xs4all.nl>
 # Created: 2018-01-21 22:44:51 +0100
-# Last modified: 2024-07-23T14:52:22+0200
+# Last modified: 2024-07-24T22:50:38+0200
 .POSIX:
 .PHONY: help clean check format uninstall zip
 .SUFFIXES:
@@ -36,7 +36,10 @@ check:: .IGNORE ## Run the pylama code checker
 format:: ## Reformat all source code using black
 	black makedb.py repotool.py
 
-install: ${REPODIR}/repotool ${REPODIR}/makedb ${REPODIR}/newdb  ## Install the programs
+install: ${REPODIR} ${REPODIR}/repotool ${REPODIR}/makedb ${REPODIR}/newdb  ## Install the programs
+
+${REPODIR}:
+	install -d ${REPODIR}
 
 ${REPODIR}/makedb: makedb.py
 	install -m 700 makedb.py ${REPODIR}/makedb
