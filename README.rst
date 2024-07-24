@@ -5,7 +5,7 @@ Scripts for interacting with FreeBSD package repositories
 :tags: FreeBSD
 :author: Roland Smith
 
-.. Last modified: 2024-07-23T14:47:28+0200
+.. Last modified: 2024-07-25T01:03:51+0200
 .. vim:spelllang=en
 
 For updating several machines to a new version of FreeBSD I wanted to download
@@ -21,8 +21,29 @@ machines.
 
 .. PELICAN_END_SUMMARY
 
-makedb
-------
+Installation
+============
+
+Invoking ``make install`` creates the directory ``$HOME/freebsd-quarterly``,
+and places the programs ``newdb``, ``makedb`` and ``repotool`` in there.
+
+Note that these programs can be run as a normal user and do not require root
+privileges.
+
+
+
+
+
+The programs
+============
+
+newdb
+-----
+
+This shell-script downloads ``packagesite.txz`` for the quarterly branch of
+the ports tree for the built-in version and architecture, e.g. ``freebsd:14:x86:64``.
+
+.. note:: This should match the ``ABI`` constant in ``repotool.py``!
 
 Every package site contains a file ``packagesite.txz``, which contains the
 file ``packagesite.yaml``, ``packagesite.yaml.pub`` and ``packagesite.yaml.sig``.
@@ -34,6 +55,13 @@ The signature can be verified as follows::
     openssl dgst -verify packagesite.yaml.pub -signature packagesite.yaml.sig
 
 This should return ``Verified OK``.
+
+It then invokes ``makedb`` to convert the information in the
+``packagesite.yaml`` into an sqlite3 database.
+
+makedb
+------
+
 
 The script ``makedb.py`` reads the YAML file, and converts the contents to
 Python native data structures.
