@@ -1,11 +1,11 @@
-Scripts for maintaining with FreeBSD package repositories
-#########################################################
+Scripts for maintaining a FreeBSD package repository
+####################################################
 
 :date: 2022-10-15
 :tags: FreeBSD
 :author: Roland Smith
 
-.. Last modified: 2024-07-25T12:47:57+0200
+.. Last modified: 2024-07-25T21:29:29+0200
 .. vim:spelllang=en
 
 For updating several machines to a new version of FreeBSD I wanted to download
@@ -23,10 +23,20 @@ For me, this strikes a good balance between availability and time spent on
 maintenance.
 
 It is now used as an offline cache for all the packages that I use on my
-machines. For me this cache is just above 2 GB, so it's easy to distribute on
+machines. For me this cache is just above 2 GiB, so it's easy to distribute on
 a USB thumb drive.
 
 .. PELICAN_END_SUMMARY
+
+Requirements
+============
+
+* FreeBSD operating system,
+* ``pkg``,
+* ``curl``,
+* ``python`` version 3 (FreeBSD default version),
+* ``sqlite3`` package for python.
+
 
 Installation
 ============
@@ -81,20 +91,22 @@ When this is done, running ``pkg install`` will use packages from your cache.
 
 The quarterly branch of the ports tree does not move as fast as the main
 branch, so it is not necessary to check for updates every day.
-Generally, I keep an eye on freshports_ to check updates to the quarterly
-branch.
+Generally, I keep an eye on the relevant branch of the `git server for ports`_
+to check for interesting updates.
+And I also check the `package server`_ for whenever the latest build of the
+quarterly branch was published.
 
-.. _freshports: https://www.freshports.org/
+.. _git server for ports: https://cgit.freebsd.org/ports/
+.. _package server: http://pkg.freebsd.org/freebsd:14:x86:64/
 
-Then every other week or so, I run ``./newdb`` from the
-``$HOME/freebsd-quarterly`` directory.
-After that I run ``./repotool show-upgrade``. If there are useful updates (not
-just package size changes) I run ``./repotool upgrade`` and then ``pkg upgrade``.
+Whenever an update is warranted, I change to the ``$HOME/freebsd-quarterly``
+directory and run ``./newdb``.
+After that I run ``./repotool show-upgrade``. If there are useful updates (not
+just package size changes) I run ``./repotool upgrade`` and then
+``doas pkg upgrade`` to install upgraded packages.
 
 Every month or so, I run ``./repotool refresh`` to pick up any changes in
 dependencies.
-
-
 
 
 The programs
