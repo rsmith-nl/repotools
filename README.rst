@@ -5,16 +5,18 @@ Scripts for interacting with FreeBSD package repositories
 :tags: FreeBSD
 :author: Roland Smith
 
-.. Last modified: 2024-07-25T09:11:57+0200
+.. Last modified: 2024-07-25T10:26:35+0200
 .. vim:spelllang=en
 
 For updating several machines to a new version of FreeBSD I wanted to download
-all the packages I need beforehand without installing them.
+the packages I need *and all their dependencies* beforehand without installing
+them.
 
 Since I could not find a way to do that using ``pkg``, I wrote my own tools.
 
 It can be used for other versions, architectures and releases by editing the
-configuration variables at the begin of ``repotool.py``
+configuration variables at the begin of ``repotool.py`` and changing the
+``curl`` invocation at the beginning of ``newdb.sh`` accordingly.
 
 It is now used as an offline cache for all the packages that I use on my
 machines.
@@ -72,7 +74,7 @@ The script verifies the public key using::
 
 This should produce the output ``Key is valid``.
 
-It then also verfies the signature as follows::
+It then also verifies the signature as follows::
 
     sha256 -q packagesite.yaml | tr -d '\n' | \
     openssl dgst -verify packagesite.yaml.pub -signature packagesite.yaml.sig
@@ -131,12 +133,12 @@ commands:
 * ``show <pkgname>``: When given a valid package name (without version), it
   produces information about this package and shows the package and all its
   dependencies that would be downloaded if they weren't already in the
-  ``packages/`` directory.
+  packages directory.
 * ``contains <string>``: List all the packages that have the given string in
   their name.
 * ``get <pkgname>``: When given a valid package name (without version),
   download the package and *all* its dependencies unless they already exist in
-  in the ``packages/`` directory.
+  in the packages directory.
 * ``delete <pkgname>``: Delete a package when no other package depends on it.
 * ``info <pkgname>``: When given a valid package name (without version), it
   produces information about this package
@@ -146,4 +148,3 @@ commands:
 * ``show-upgrade``: Show what would be done if ``upgrade`` was used.
 * ``refresh``: For every package, check and update the requirements.
 * ``unused``: Shows the packages in the repo that are not installed.
-
