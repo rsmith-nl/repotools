@@ -5,7 +5,7 @@ Scripts for interacting with FreeBSD package repositories
 :tags: FreeBSD
 :author: Roland Smith
 
-.. Last modified: 2024-07-25T01:03:51+0200
+.. Last modified: 2024-07-25T09:11:57+0200
 .. vim:spelllang=en
 
 For updating several machines to a new version of FreeBSD I wanted to download
@@ -31,7 +31,24 @@ Note that these programs can be run as a normal user and do not require root
 privileges.
 
 
+Filling the repository
+======================
 
+To fill the repository, start by running::
+
+    pkg query -e "%#r == 0" "%n-%v" > leaf-packages.txt
+
+The file ``leaf-packages.txt`` then contains a list of packages that are not
+required by others.
+
+Go to ``$HOME/freebsd-quarterly``.
+For each of the packages in ``leaf-packages.txt``, issue the following
+command::
+
+    ./repotool get <packagname-version>
+
+This will download the package *and all its dependencies* and store them in
+``$HOME/freebsd-quarterly/repo/All``.
 
 
 The programs
@@ -49,19 +66,25 @@ Every package site contains a file ``packagesite.txz``, which contains the
 file ``packagesite.yaml``, ``packagesite.yaml.pub`` and ``packagesite.yaml.sig``.
 We are interested in the YAML file.
 
-The signature can be verified as follows::
+The script verifies the public key using::
+
+    openssl pkey -pubcheck -pubin -in packagesite.yaml.pub -noout
+
+This should produce the output ``Key is valid``.
+
+It then also verfies the signature as follows::
 
     sha256 -q packagesite.yaml | tr -d '\n' | \
     openssl dgst -verify packagesite.yaml.pub -signature packagesite.yaml.sig
 
-This should return ``Verified OK``.
+This should output ``Verified OK``.
 
 It then invokes ``makedb`` to convert the information in the
 ``packagesite.yaml`` into an sqlite3 database.
 
+
 makedb
 ------
-
 
 The script ``makedb.py`` reads the YAML file, and converts the contents to
 Python native data structures.
