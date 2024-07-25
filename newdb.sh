@@ -5,11 +5,34 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-11-06T11:02:30+0100
-# Last modified: 2024-04-19T09:45:07+0200
+# Last modified: 2024-07-25T09:00:25+0200
 
 echo -n "Downloading new package database... "
-curl --silent http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.txz | \
-tar -xOf - packagesite.yaml > new.yaml
+curl --silent -O http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.txz
+tar -xOf packagesite.txz packagesite.yaml > new.yaml
+echo "done."
+
+echo "Verifying public key..."
+tar -xOf packagesite.txz packagesite.yaml.pub > new.pub
+openssl pkey -pubcheck -pubin -in new.pub -noout
+CHECKRESULT=$?
+if [ $CHECKRESULT -ne 0 ]; then
+    echo "An error occurred. Public key is not valid. Exiting!"
+    rm -f new.yaml new.pub
+    exit 1
+fi
+echo "done."
+echo "Verifying digest..."
+tar -xOf packagesite.txz packagesite.yaml.sig > new.sig
+sha256 -q packagesite.yaml | tr -d '\n' | \
+    openssl dgst -verify new.pub -signature new.sig
+CHECKRESULT=$?
+if [ $CHECKRESULT -ne 0 ]; then
+    echo "An error occurred. Verification failed. Exiting!"
+    rm -f new.yaml new.pub new.sig
+    exit 1
+fi
+rm -f new.pub new.sig
 echo "done."
 
 diff -q packagesite.yaml new.yaml >/dev/null
