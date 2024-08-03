@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-11-06T11:02:30+0100
-# Last modified: 2024-07-25T09:00:25+0200
+# Last modified: 2024-08-04T10:13:28+0200
 
 echo -n "Downloading new package database... "
 curl --silent -O http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.txz
@@ -24,7 +24,7 @@ fi
 echo "done."
 echo "Verifying digest..."
 tar -xOf packagesite.txz packagesite.yaml.sig > new.sig
-sha256 -q packagesite.yaml | tr -d '\n' | \
+sha256 -q new.yaml | tr -d '\n' | \
     openssl dgst -verify new.pub -signature new.sig
 CHECKRESULT=$?
 if [ $CHECKRESULT -ne 0 ]; then
