@@ -5,9 +5,10 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-07-23T14:50:44+0200
+# Last modified: 2024-08-16T00:17:17+0200
 
 import glob
+import hashlib
 import json
 import os
 import sqlite3
@@ -35,6 +36,7 @@ cmds = [
     "show-upgrade",
     "refresh",
     "unused",
+    "check",
 ]
 help = [
     "show all available packages",
@@ -47,7 +49,8 @@ help = [
     "download any packages where the version or package size has changed",
     "show what would be done if upgrade were called",
     "for every package, check and update the requirements",
-    "show packages in the repo that are not installed"
+    "show packages in the repo that are not installed",
+    "for every package, check size and checksum",
 ]
 
 
@@ -103,6 +106,8 @@ def main():  # noqa
         cmd_refresh(cur, start)
     elif cmd == "unused":
         cmd_unused(cur, start)
+    elif cmd == "check":
+        cmd_check(cur, start)
 
 
 def cmd_list(cur, start):
@@ -420,6 +425,40 @@ def cmd_unused(cur, start):
     uninstalled = sorted(repopkgs - installedpkgs)
     for pkg in uninstalled:
         print(pkg)
+    print(f"# duration: {duration:.3f} s")
+
+
+def cmd_check(cur, start):
+    """
+    Check size and checksum of existing packages.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+    """
+    for completename in glob.glob(PKGDIR + "*.pkg"):
+        cursize = os.path.getsize(completename)
+        with open(completename, "rb") as filecontents:
+            data = filecontents.read()
+        cursum = hashlib.sha256(data).hexdigest()
+        pkgname = completename[9:-4].rsplit("-", maxsplit=1)[0]
+        try:
+            dbsum, dbsize = cur.execute(
+                "SELECT sum, pkgsize FROM packages WHERE name==?", (pkgname,)
+            ).fetchone()
+        except (ValueError, TypeError):
+            print(f"# skipping {pkgname}, not in database")
+            continue
+        print(f"Checking {pkgname}", end="")
+        if dbsum != cursum:
+            print(f"\n# CHECKSUM package “{pkgname}” differs")
+            print(f"# current package: {cursum}")
+            print(f"# database: {dbsum}")
+        elif dbsize != cursize:
+            print(f"\n# SIZE package “{pkgname}”; {cursize} → {dbsize}")
+        else:
+            print("... OK")
+    duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
 
 
