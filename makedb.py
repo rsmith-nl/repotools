@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2024-08-16T16:13:28+0200
+# Last modified: 2024-08-16T17:26:31+0200
 
 import glob
 import hashlib
@@ -161,6 +161,7 @@ if __name__ == "__main__":
                 manifest["path"] = repopath
                 manifest["pkgsize"] = cursize
                 insert_pkg(cur, manifest)
+                packages.append(pkg)
             except ValueError:
                 print(f"# skipping {pkgname}, could not get manifest")
             print("done")
