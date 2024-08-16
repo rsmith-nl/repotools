@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-08-16T13:41:36+0200
+# Last modified: 2024-08-16T13:42:08+0200
 
 import glob
 import hashlib
@@ -453,7 +453,7 @@ def cmd_check(cur, start):
         except (ValueError, TypeError):
             print(f"# skipping {pkgname}, not in database")
             continue
-        print(f"Checking {pkgname}", end="")
+        # print(f"Checking {pkgname}", end="")
         if dbsum != cursum:
             print(f"\n# CHECKSUM package “{pkgname}” differs")
             print(f"# current package: {cursum}")
