@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-08-16T13:42:08+0200
+# Last modified: 2024-08-16T16:11:39+0200
 
 import glob
 import hashlib
@@ -37,7 +37,6 @@ cmds = [
     "refresh",
     "unused",
     "check",
-    "fix",
 ]
 help = [
     "show all available packages",
@@ -52,7 +51,6 @@ help = [
     "for every package, check and update the requirements",
     "show packages in the repo that are not installed",
     "for every package, check size and checksum",
-    "for every package, fix size and checksum and add missing packages",
 ]
 
 
@@ -110,8 +108,6 @@ def main():  # noqa
         cmd_unused(cur, start)
     elif cmd == "check":
         cmd_check(cur, start)
-    elif cmd == "fix":
-        cmd_fix(cur, start)
 
 
 def cmd_list(cur, start):
@@ -460,54 +456,6 @@ def cmd_check(cur, start):
             print(f"# database: {dbsum}")
         elif dbsize != cursize:
             print(f"\n# SIZE package “{pkgname}”; {cursize} → {dbsize}")
-        else:
-            print("... OK")
-    duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
-
-
-def cmd_fix(cur, start):
-    """
-    Fix size and checksum of existing packages.
-    Add records for packages not in the database.
-
-    Arguments:
-        cur (Cursor): Sqlite database cursor.
-        start (float): Start time.
-    """
-    for completename in glob.glob(PKGDIR + "*.pkg"):
-        repopath = completename.removeprefix(REPO)
-        cursize = os.path.getsize(completename)
-        with open(completename, "rb") as filecontents:
-            data = filecontents.read()
-            cursum = hashlib.sha256(data).hexdigest()
-            del data
-        pkgname = completename[9:-4].rsplit("-", maxsplit=1)[0]
-        try:
-            pkgid, dbsum, dbsize = cur.execute(
-                "SELECT rowid, sum, pkgsize FROM packages WHERE name==?", (pkgname,)
-            ).fetchone()
-        except (ValueError, TypeError):
-            print(f"# adding {pkgname} to database... ", end="")
-            try:
-                manifest = get_manifest(completename)
-                # Add missing data.
-                manifest["sum"] = cursum
-                manifest["repopath"] = repopath
-                manifest["path"] = repopath
-                manifest["pkgsize"] = cursize
-                insert_pkg(cur, manifest)
-            except ValueError:
-                print(f"skipping {pkgname}, could not get manifest")
-            print("done")
-            continue
-        if dbsum != cursum or dbsize != cursize:
-            print(f"# updating {pkgname}... ", end="")
-            cur.execute(
-                "UPDATE packages SET sum = ?, pkgsize = ? WHERE rowid == ?",
-                (cursum, cursize, pkgid),
-            )
-            print("done")
     duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
 
