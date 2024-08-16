@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-08-16T00:17:17+0200
+# Last modified: 2024-08-16T13:41:36+0200
 
 import glob
 import hashlib
@@ -37,6 +37,7 @@ cmds = [
     "refresh",
     "unused",
     "check",
+    "fix",
 ]
 help = [
     "show all available packages",
@@ -51,6 +52,7 @@ help = [
     "for every package, check and update the requirements",
     "show packages in the repo that are not installed",
     "for every package, check size and checksum",
+    "for every package, fix size and checksum and add missing packages",
 ]
 
 
@@ -108,6 +110,8 @@ def main():  # noqa
         cmd_unused(cur, start)
     elif cmd == "check":
         cmd_check(cur, start)
+    elif cmd == "fix":
+        cmd_fix(cur, start)
 
 
 def cmd_list(cur, start):
@@ -462,6 +466,52 @@ def cmd_check(cur, start):
     print(f"# duration: {duration:.3f} s")
 
 
+def cmd_fix(cur, start):
+    """
+    Fix size and checksum of existing packages.
+    Add records for packages not in the database.
+
+    Arguments:
+        cur (Cursor): Sqlite database cursor.
+        start (float): Start time.
+    """
+    for completename in glob.glob(PKGDIR + "*.pkg"):
+        repopath = completename.removeprefix(REPO)
+        cursize = os.path.getsize(completename)
+        with open(completename, "rb") as filecontents:
+            data = filecontents.read()
+            cursum = hashlib.sha256(data).hexdigest()
+            del data
+        pkgname = completename[9:-4].rsplit("-", maxsplit=1)[0]
+        try:
+            pkgid, dbsum, dbsize = cur.execute(
+                "SELECT rowid, sum, pkgsize FROM packages WHERE name==?", (pkgname,)
+            ).fetchone()
+        except (ValueError, TypeError):
+            print(f"# adding {pkgname} to database... ", end="")
+            try:
+                manifest = get_manifest(completename)
+                # Add missing data.
+                manifest["sum"] = cursum
+                manifest["repopath"] = repopath
+                manifest["path"] = repopath
+                manifest["pkgsize"] = cursize
+                insert_pkg(cur, manifest)
+            except ValueError:
+                print(f"skipping {pkgname}, could not get manifest")
+            print("done")
+            continue
+        if dbsum != cursum or dbsize != cursize:
+            print(f"# updating {pkgname}... ", end="")
+            cur.execute(
+                "UPDATE packages SET sum = ?, pkgsize = ? WHERE rowid == ?",
+                (cursum, cursize, pkgid),
+            )
+            print("done")
+    duration = time.monotonic() - start
+    print(f"# duration: {duration:.3f} s")
+
+
 def contains(cur, s):
     """Return a list of package names that contain s."""
     cur.execute(f"SELECT name FROM packages WHERE name LIKE '%{s}%'")
@@ -534,6 +584,89 @@ def check_running():
             print("Upgrade, refresh or delete in progress.", end=" ")
             print(f"Process {pid}, terminal {terminal_name}; exiting.")
             sys.exit(3)
+
+
+def get_manifest(repopath):
+    """
+    Get the manifest from a package.
+
+    Arguments:
+        repopath (str): Name of the package, including PKGDIR.
+
+    Note that the manifest is missing some keys that are present in the database:
+    * sum: SHA256 checksum of the contents package.
+    * repopath: location in the repo relative to REPO
+    * path: see repopath
+    * pkgsize: size on disk of the package.
+
+    Returns: a dictionary containing the manifest.
+    """
+    args = ("tar", "xOf", repopath, "+COMPACT_MANIFEST")
+    rv = sp.run(args, stdout=sp.PIPE, stderr=sp.DEVNULL)
+    if rv.returncode != 0:
+        raise ValueError("extracting manifest failed")
+    return json.loads(rv.stdout)
+
+
+def insert_pkg(cur, pkg):
+    """
+    Insert a package into the database from its manifest.
+
+    Arguments:
+        cur (Cursor): database cursor
+        pkg (dict): manifest for the package
+    """
+    cur.execute(
+        "INSERT INTO packages VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            pkg["name"],
+            pkg["origin"],
+            pkg["version"],
+            pkg["comment"],
+            pkg["maintainer"],
+            pkg["www"],
+            pkg["abi"],
+            pkg["arch"],
+            pkg["prefix"],
+            pkg["sum"],  # has to be added to file manifest
+            pkg["flatsize"],
+            pkg["path"],  # has to be added to file manifest
+            pkg["repopath"],  # has to be added to file manifest
+            pkg["licenselogic"],
+            pkg["pkgsize"],  # has to be added to file manifest
+            pkg["desc"],
+        ),
+    )
+    pkgid = cur.lastrowid
+    if "licenses" in pkg:
+        for lic in pkg["licenses"]:
+            cur.execute("INSERT INTO licenses VALUES (?, ?)", (pkgid, lic))
+    if "categories" in pkg:
+        for cat in pkg["categories"]:
+            cur.execute("INSERT INTO categories VALUES (?, ?)", (pkgid, cat))
+    if "shlibs_required" in pkg:
+        for req in pkg["shlibs_required"]:
+            cur.execute("INSERT INTO shlibs_required VALUES (?, ?)", (pkgid, req))
+    if "shlibs_provided" in pkg:
+        for prov in pkg["shlibs_provided"]:
+            cur.execute("INSERT INTO shlibs_provided VALUES (?, ?)", (pkgid, prov))
+    if "options" in pkg:
+        for k, v in pkg["options"].items():
+            cur.execute("INSERT INTO options VALUES (?, ?, ?)", (pkgid, k, v))
+    if "annotations" in pkg:
+        for k, v in pkg["annotations"].items():
+            cur.execute("INSERT INTO annotations VALUES (?, ?, ?)", (pkgid, k, v))
+    if "deps" in pkg:
+        idbyname = dict(cur.execute("SELECT name, rowid FROM packages").fetchall())
+        for depname, depdata in pkg["deps"].items():
+            deporig, depver = depdata.values()
+            depid = idbyname.get(depname, -1)
+            cur.execute(
+                "INSERT INTO deps VALUES (?, ?, ?, ?, ?)",
+                (pkgid, depname, deporig, depver, depid),
+            )
+    # Save changes to the database.
+    cur.connection.commit()
 
 
 if __name__ == "__main__":
