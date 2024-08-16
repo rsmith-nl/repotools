@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2023-11-05T21:30:15+0100
+# Last modified: 2024-08-16T11:14:37+0200
 
 import json
 import os
@@ -101,11 +101,7 @@ for pkg in packages:
     if "deps" in pkg:
         for depname, depdata in pkg["deps"].items():
             deporig, depver = depdata.values()
-            if depname in idbyname:
-                depid = idbyname[depname]
-            else:
-                # print(f"Unknown depname = {depname}")
-                depid = -1
+            depid = idbyname.get(depname, -1)
             cur.execute(
                 "INSERT INTO deps VALUES (?, ?, ?, ?, ?)",
                 (idbyname[pkg["name"]], depname, deporig, depver, depid),
