@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-08-16T16:11:39+0200
+# Last modified: 2024-08-16T16:14:52+0200
 
 import glob
 import hashlib
@@ -554,67 +554,6 @@ def get_manifest(repopath):
     if rv.returncode != 0:
         raise ValueError("extracting manifest failed")
     return json.loads(rv.stdout)
-
-
-def insert_pkg(cur, pkg):
-    """
-    Insert a package into the database from its manifest.
-
-    Arguments:
-        cur (Cursor): database cursor
-        pkg (dict): manifest for the package
-    """
-    cur.execute(
-        "INSERT INTO packages VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (
-            pkg["name"],
-            pkg["origin"],
-            pkg["version"],
-            pkg["comment"],
-            pkg["maintainer"],
-            pkg["www"],
-            pkg["abi"],
-            pkg["arch"],
-            pkg["prefix"],
-            pkg["sum"],  # has to be added to file manifest
-            pkg["flatsize"],
-            pkg["path"],  # has to be added to file manifest
-            pkg["repopath"],  # has to be added to file manifest
-            pkg["licenselogic"],
-            pkg["pkgsize"],  # has to be added to file manifest
-            pkg["desc"],
-        ),
-    )
-    pkgid = cur.lastrowid
-    if "licenses" in pkg:
-        for lic in pkg["licenses"]:
-            cur.execute("INSERT INTO licenses VALUES (?, ?)", (pkgid, lic))
-    if "categories" in pkg:
-        for cat in pkg["categories"]:
-            cur.execute("INSERT INTO categories VALUES (?, ?)", (pkgid, cat))
-    if "shlibs_required" in pkg:
-        for req in pkg["shlibs_required"]:
-            cur.execute("INSERT INTO shlibs_required VALUES (?, ?)", (pkgid, req))
-    if "shlibs_provided" in pkg:
-        for prov in pkg["shlibs_provided"]:
-            cur.execute("INSERT INTO shlibs_provided VALUES (?, ?)", (pkgid, prov))
-    if "options" in pkg:
-        for k, v in pkg["options"].items():
-            cur.execute("INSERT INTO options VALUES (?, ?, ?)", (pkgid, k, v))
-    if "annotations" in pkg:
-        for k, v in pkg["annotations"].items():
-            cur.execute("INSERT INTO annotations VALUES (?, ?, ?)", (pkgid, k, v))
-    if "deps" in pkg:
-        idbyname = dict(cur.execute("SELECT name, rowid FROM packages").fetchall())
-        for depname, depdata in pkg["deps"].items():
-            deporig, depver = depdata.values()
-            depid = idbyname.get(depname, -1)
-            cur.execute(
-                "INSERT INTO deps VALUES (?, ?, ?, ?, ?)",
-                (pkgid, depname, deporig, depver, depid),
-            )
-    # Save changes to the database.
-    cur.connection.commit()
 
 
 if __name__ == "__main__":
