@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2024-08-16T17:52:57+0200
+# Last modified: 2024-08-24T09:34:31+0200
 
 import glob
 import hashlib
@@ -166,8 +166,14 @@ if __name__ == "__main__":
                 print(f"# skipping {pkgname}, could not get manifest")
             print("done")
             continue
-        if dbsum != cursum or dbsize != cursize:
-            print(f"# updating {pkgname}... ", end="")
+        reason = []
+        if dbsum != cursum:
+            reason.append("checksum")
+        if dbsize != cursize:
+            reason.append("size")
+        if reason:
+            reason = "(" + ", ".join(reason) + ")"
+            print(f"# updating {pkgname} {reason}... ", end="")
             cur.execute(
                 "UPDATE packages SET sum = ?, pkgsize = ? WHERE rowid == ?",
                 (cursum, cursize, pkgid),
