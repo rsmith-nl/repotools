@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2024-08-24T09:34:31+0200
+# Last modified: 2024-09-06T09:24:41+0200
 
 import glob
 import hashlib
@@ -16,6 +16,8 @@ import subprocess as sp
 import time
 
 # Configuration
+ABI = "FreeBSD:14:amd64"
+REL = "quarterly"
 REPO = "repo/"
 PKGDIR = REPO + "All/"  # must end with path separator.
 
@@ -92,6 +94,29 @@ def insert_pkg(cur, pkg):
             cur.execute("INSERT INTO annotations VALUES (?, ?, ?)", (pkgid, k, v))
 
 
+def download(repopath):
+    """
+    Download package.
+
+    Arguments:
+        repopath (str): Name of the package to download.
+    """
+    args = [
+        "curl",
+        "-s",
+        "--output-dir",
+        PKGDIR,
+        "-O",
+        f"http://pkg.freebsd.org/{ABI}/{REL}/" + repopath,
+    ]
+    print(f"downloading {repopath}... ", end="")
+    cp = sp.run(args)
+    if cp.returncode != 0:
+        print(f"failed with code {cp.returncode} ", end="")
+    # Make packages readable for everyone.
+    os.chmod(PKGDIR[:-4] + repopath, 0o0644)
+
+
 # Main program starts here
 if __name__ == "__main__":
     start = time.monotonic()
@@ -152,7 +177,7 @@ if __name__ == "__main__":
                 "SELECT rowid, sum, pkgsize FROM packages WHERE name==?", (pkgname,)
             ).fetchone()
         except (ValueError, TypeError):
-            print(f"# adding {pkgname} to database... ", end="")
+            print(f"Adding {pkgname} to database... ", end="")
             try:
                 manifest = get_manifest(completename)
                 # Add missing data.
@@ -163,8 +188,8 @@ if __name__ == "__main__":
                 insert_pkg(cur, manifest)
                 packages.append(manifest)
             except ValueError:
-                print(f"# skipping {pkgname}, could not get manifest")
-            print("done")
+                print(f"(skipping {pkgname}, could not get manifest) ", end="")
+            print("done.")
             continue
         reason = []
         if dbsum != cursum:
@@ -173,12 +198,10 @@ if __name__ == "__main__":
             reason.append("size")
         if reason:
             reason = "(" + ", ".join(reason) + ")"
-            print(f"# updating {pkgname} {reason}... ", end="")
-            cur.execute(
-                "UPDATE packages SET sum = ?, pkgsize = ? WHERE rowid == ?",
-                (cursum, cursize, pkgid),
-            )
-            print("done")
+            print(f"Updating {pkgname} {reason}... ", end="")
+            os.remove(completename)
+            download(repopath)
+            print("done.")
     db.commit()
 
     # Only after all packages have been ID'd can we resolve deps.
@@ -197,4 +220,4 @@ if __name__ == "__main__":
     db.commit()
     db.close()
     runtime = time.monotonic() - start
-    print(f"# duration: {runtime:.3f} s")
+    print(f"Duration: {runtime:.3f} s.")
