@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-08-16T16:14:52+0200
+# Last modified: 2024-09-06T09:33:04+0200
 
 import glob
 import hashlib
@@ -32,8 +32,6 @@ cmds = [
     "delete",
     "info",
     "leaves",
-    "upgrade",
-    "show-upgrade",
     "refresh",
     "unused",
     "check",
@@ -98,10 +96,6 @@ def main():  # noqa
         cmd_delete(cur, start, pkgname)
     elif cmd == "leaves":
         cmd_leaves(cur, start)
-    elif cmd == "upgrade":
-        cmd_upgrade(cur, start)
-    elif cmd == "show-upgrade":
-        cmd_show_upgrade(cur, start)
     elif cmd == "refresh":
         cmd_refresh(cur, start)
     elif cmd == "unused":
@@ -354,58 +348,6 @@ def cmd_leaves(cur, start):
     )
     for p in leafnames:
         print(p)
-    duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
-
-
-def cmd_upgrade(cur, start):
-    """
-    Upgrade existing packages.
-
-    Arguments:
-        cur (Cursor): Sqlite database cursor.
-        start (float): Start time.
-    """
-    for pkgname in glob.glob(PKGDIR + "*.pkg"):
-        cursize = os.path.getsize(pkgname)
-        name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
-        try:
-            dbver, repopath, dbsize = cur.execute(
-                "SELECT version, repopath, pkgsize FROM packages WHERE name==?", (name,)
-            ).fetchone()
-        except TypeError:
-            print(f"# package {name} not in database.")
-            continue
-        if dbver != curver or dbsize != cursize:
-            print(f"# Removing old package “{pkgname}”")
-            os.remove(pkgname)
-            download(repopath)
-    duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
-
-
-def cmd_show_upgrade(cur, start):
-    """
-    Show which existing packages would be upgraded.
-
-    Arguments:
-        cur (Cursor): Sqlite database cursor.
-        start (float): Start time.
-    """
-    for pkgname in glob.glob(PKGDIR + "*.pkg"):
-        cursize = os.path.getsize(pkgname)
-        name, curver = pkgname[9:-4].rsplit("-", maxsplit=1)
-        try:
-            dbver, repopath, dbsize = cur.execute(
-                "SELECT version, repopath, pkgsize FROM packages WHERE name==?", (name,)
-            ).fetchone()
-        except TypeError:
-            print(f"# package {name} not in database.")
-            continue
-        if dbver != curver:
-            print(f"# VERSION package “{name}”; {curver} → {dbver}")
-        elif dbsize != cursize:
-            print(f"# SIZE package “{name}”; {cursize} → {dbsize}")
     duration = time.monotonic() - start
     print(f"# duration: {duration:.3f} s")
 
