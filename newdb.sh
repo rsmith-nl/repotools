@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-11-06T11:02:30+0100
-# Last modified: 2024-09-14T11:33:44+0200
+# Last modified: 2024-09-14T11:35:48+0200
 
 BOLD_WHITE='\033[1;37m'
 CYAN='\033[0;36m'
@@ -61,9 +61,7 @@ if [ $DIFFRESULT -eq 1 ]; then
     ./makedb
 elif [ $DIFFRESULT -gt 1 ]; then
     printf "${BOLD_RED}An error occurred. diff returned $DIFFRESULT${RESET}\n"
-    rm -f new.yaml
 else
     printf "${CYAN}No changes in package database.${RESET}\n"
-    rm -f new.yaml
 fi
-
+rm -f new.yaml
