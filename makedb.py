@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2024-09-06T09:24:41+0200
+# Last modified: 2024-09-14T10:53:26+0200
 
 import glob
 import hashlib
@@ -171,10 +171,11 @@ if __name__ == "__main__":
             data = filecontents.read()
             cursum = hashlib.sha256(data).hexdigest()
             del data
-        pkgname = completename[9:-4].rsplit("-", maxsplit=1)[0]
+        pkgname, curver = completename[9:-4].rsplit("-", maxsplit=1)
         try:
-            pkgid, dbsum, dbsize = cur.execute(
-                "SELECT rowid, sum, pkgsize FROM packages WHERE name==?", (pkgname,)
+            pkgid, dbsum, dbsize, dbver = cur.execute(
+                "SELECT rowid, sum, pkgsize, version FROM packages WHERE name==?",
+                (pkgname,)
             ).fetchone()
         except (ValueError, TypeError):
             print(f"Adding {pkgname} to database... ", end="")
@@ -192,6 +193,8 @@ if __name__ == "__main__":
             print("done.")
             continue
         reason = []
+        if dbver != curver:
+            reason.append("version")
         if dbsum != cursum:
             reason.append("checksum")
         if dbsize != cursize:
