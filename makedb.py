@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2024-09-15T10:38:49+0200
+# Last modified: 2024-09-15T10:50:38+0200
 
 import glob
 import hashlib
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     print(f"{GREEN}done.{RESET}")
 
     # Insert packages from repo that are not in the database,
-    # and fix size/checksum mismatches
+    # Download new versions and size/checksum mismatches.
     print("Inserting packages not in database... ")
     for completename in glob.glob(PKGDIR + "*.pkg"):
         repopath = completename.removeprefix(REPO)
@@ -207,6 +207,7 @@ if __name__ == "__main__":
         reason = []
         if dbver != curver:
             reason.append(f"{PURPLE}version{RESET}")
+            repopath = "All" + os.sep + pkgname + "-" + dbver + ".pkg"
         if dbsum != cursum:
             reason.append("checksum")
         if dbsize != cursize:
