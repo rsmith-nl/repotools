@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-09-06T09:33:04+0200
+# Last modified: 2024-09-15T11:07:16+0200
 
 import glob
 import hashlib
@@ -22,6 +22,17 @@ REL = "quarterly"
 REPODIR = f"/home/{os.getenv('USER')}/freebsd-quarterly"
 REPO = "repo/"
 PKGDIR = REPO + "All/"  # must end with path separator.
+
+# Colors
+BOLD_WHITE = "\033[1;37m"
+CYAN = "\033[0;36m"
+GREEN = "\033[0;32m"
+PURPLE = "\033[0;35m"
+BOLD_RED = "\033[1;31m"
+RED = "\033[0;31m"
+YELLOW = "\033[0;33m"
+BOLD_YELLOW = "\033[1;33m"
+RESET = "\033[0m"  # No Color
 
 # Supported commands
 cmds = [
@@ -65,10 +76,10 @@ def main():  # noqa
     if len(args) == 0 or args[0] not in cmds:
         print(f"usage: {sys.argv[0]} {'|'.join(cmds)} pkgname")
         for a, b in zip(cmds, help):
-            print(f"* {a:8}: {b}.")
+            print(f"* {BOLD_WHITE}{a:8}{RESET}: {b}.")
         sys.exit(0)
     if not os.path.isdir(PKGDIR):
-        print(f"Error: “{PKGDIR}” not found in “{REPODIR}”.")
+        print(f"{RED}Error: “{PKGDIR}” not found in “{REPODIR}”.{RESET}")
         sys.exit(2)
     cmd = args[0]
     pkgname = args[1] if len(args) > 1 else ""
@@ -116,7 +127,7 @@ def cmd_list(cur, start):
     for j in cur.fetchall():
         print(j[0][4:])
     duration = time.monotonic() - start
-    print(f"duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def cmd_contains(cur, start, pkgname):
@@ -131,7 +142,7 @@ def cmd_contains(cur, start, pkgname):
     for p in contains(cur, pkgname):
         print(p)
     duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def cmd_info(cur, start, pkgname):
@@ -158,7 +169,7 @@ def cmd_info(cur, start, pkgname):
     except TypeError:
         print(f"# package “{pkgname}” does not exist.")
     duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def cmd_show(cur, start, pkgname):
@@ -193,11 +204,11 @@ def cmd_show(cur, start, pkgname):
             if not os.path.exists(PKGDIR + pkgname):
                 print(rp[0])
             else:
-                print(f"# skipping {pkgname}, already exists.")
+                print(f"{PURPLE}# skipping {pkgname}, already exists.{RESET}")
     except TypeError:
         print(f"# package “{pkgname}” does not exist.")
     duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def cmd_get(cur, start, pkgname):
@@ -221,9 +232,9 @@ def cmd_get(cur, start, pkgname):
         if not os.path.exists(PKGDIR + pkgname):
             download(rp[0])
         else:
-            print(f"# skipping {pkgname}, already exists.")
+            print(f"{PURPLE}# skipping {pkgname}, already exists.{RESET}")
     duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def cmd_delete(cur, start, pkgname):
@@ -239,7 +250,7 @@ def cmd_delete(cur, start, pkgname):
 
     def duration():
         duration = time.monotonic() - start
-        print(f"# duration: {duration:.3f} s")
+        print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
     # Get the row id and path in the repo of the package
     rv = cur.execute(
@@ -302,7 +313,7 @@ def cmd_refresh(cur, start):
         try:
             rps = deps(cur, pkgname)
         except (ValueError, TypeError):
-            print(f"# skipping {pkgname}, not in database")
+            print(f"{PURPLE}# skipping {pkgname}, not in database{RESET}")
             continue
         alldeps = [
             cur.execute("SELECT repopath FROM packages WHERE rowid IS ?", d).fetchone()
@@ -313,10 +324,8 @@ def cmd_refresh(cur, start):
             rpkgname = rp[0].split("/")[-1]
             if not os.path.exists(PKGDIR + rpkgname):
                 download(rp[0])
-            # else:
-            # print(f"# skipping {rpkgname}, already exists.")
     duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def cmd_leaves(cur, start):
@@ -349,7 +358,7 @@ def cmd_leaves(cur, start):
     for p in leafnames:
         print(p)
     duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def cmd_unused(cur, start):
@@ -367,7 +376,7 @@ def cmd_unused(cur, start):
     uninstalled = sorted(repopkgs - installedpkgs)
     for pkg in uninstalled:
         print(pkg)
-    print(f"# duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def cmd_check(cur, start):
@@ -389,17 +398,17 @@ def cmd_check(cur, start):
                 "SELECT sum, pkgsize FROM packages WHERE name==?", (pkgname,)
             ).fetchone()
         except (ValueError, TypeError):
-            print(f"# skipping {pkgname}, not in database")
+            print(f"{PURPLE}# skipping {pkgname}, not in database{RESET}")
             continue
         # print(f"Checking {pkgname}", end="")
         if dbsum != cursum:
-            print(f"\n# CHECKSUM package “{pkgname}” differs")
-            print(f"# current package: {cursum}")
-            print(f"# database: {dbsum}")
+            print(f"\n{CYAN}# CHECKSUM package “{pkgname}” differs{RESET}")
+            print(f"{CYAN}# current package: {cursum}{RESET}")
+            print(f"{CYAN}# database: {dbsum}{RESET}")
         elif dbsize != cursize:
-            print(f"\n# SIZE package “{pkgname}”; {cursize} → {dbsize}")
+            print(f"\n{CYAN}# SIZE package “{pkgname}”; {cursize} → {dbsize}{RESET}")
     duration = time.monotonic() - start
-    print(f"# duration: {duration:.3f} s")
+    print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
 
 def contains(cur, s):
@@ -453,10 +462,11 @@ def download(repopath):
     print(f"Downloading “{repopath}”... ", end="")
     cp = sp.run(args)
     if cp.returncode != 0:
-        print(f"failed, code {cp.returncode}")
-    # Make packages readable for everyone.
-    os.chmod(PKGDIR[:-4] + repopath, 0o0644)
-    print("done")
+        print(f"{RED}failed, code {cp.returncode}.{RESET}")
+    else:
+        # Make packages readable for everyone.
+        os.chmod(PKGDIR[:-4] + repopath, 0o0644)
+        print(f"{GREEN}done.{RESET}")
 
 
 def check_running():
@@ -471,7 +481,7 @@ def check_running():
         if "repotool" not in command:
             continue
         if any(j in command for j in ("upgrade", "refresh", "delete")):
-            print("Upgrade, refresh or delete in progress.", end=" ")
+            print(f"{RED}Upgrade, refresh or delete in progress.{RESET}", end=" ")
             print(f"Process {pid}, terminal {terminal_name}; exiting.")
             sys.exit(3)
 
@@ -494,7 +504,7 @@ def get_manifest(repopath):
     args = ("tar", "xOf", repopath, "+COMPACT_MANIFEST")
     rv = sp.run(args, stdout=sp.PIPE, stderr=sp.DEVNULL)
     if rv.returncode != 0:
-        raise ValueError("extracting manifest failed")
+        raise ValueError(f"{RED}extracting manifest failed{RESET}")
     return json.loads(rv.stdout)
 
 
