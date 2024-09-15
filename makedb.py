@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-10T23:13:41+0200
-# Last modified: 2024-09-15T10:50:38+0200
+# Last modified: 2024-09-15T10:51:42+0200
 
 import glob
 import hashlib
@@ -217,7 +217,7 @@ if __name__ == "__main__":
             print(f"Updating {pkgname} {reason}... ", end="")
             os.remove(completename)
             download(repopath)
-            print("done.")
+            print(f"{GREEN}done.{RESET}")
     db.commit()
 
     # Only after all packages have been ID'd can we resolve deps.
