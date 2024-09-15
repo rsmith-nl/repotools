@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-09-15T11:07:16+0200
+# Last modified: 2024-09-15T11:15:01+0200
 
 import glob
 import hashlib
@@ -55,8 +55,6 @@ help = [
     "delete a package if it is unused, plus any unused dependencies",
     "show information about a named package",
     "show all packages that are not depended on",
-    "download any packages where the version or package size has changed",
-    "show what would be done if upgrade were called",
     "for every package, check and update the requirements",
     "show packages in the repo that are not installed",
     "for every package, check size and checksum",
@@ -160,11 +158,11 @@ def cmd_info(cur, start, pkgname):
     )
     try:
         origin, version, repopath, comment, www = cur.fetchone()
-        print(f"Name: {pkgname}")
+        print(f"Name: {BOLD_WHITE}{pkgname}{RESET}")
         print(f"Version: {version}")
         print(f"Location in repository: {repopath}")
         print(f"Origin: {origin}")
-        print(f"WWW: {www}")
+        print(f"WWW: {BOLD_WHITE}{www}{RESET}")
         print(f"Comment: {comment}")
     except TypeError:
         print(f"# package “{pkgname}” does not exist.")
@@ -187,7 +185,7 @@ def cmd_show(cur, start, pkgname):
     )
     try:
         origin, version, repopath, comment = cur.fetchone()
-        print(f"Name: {pkgname}")
+        print(f"Name: {BOLD_WHITE}{pkgname}{RESET}")
         print(f"Version: {version}")
         print(f"Location in repository: {repopath}")
         print(f"Origin: {origin}")
@@ -202,9 +200,9 @@ def cmd_show(cur, start, pkgname):
         for rp in alldeps:
             pkgname = rp[0].split("/")[-1]
             if not os.path.exists(PKGDIR + pkgname):
-                print(rp[0])
+                print(BOLD_WHITE + rp[0] + RESET)
             else:
-                print(f"{PURPLE}# skipping {pkgname}, already exists.{RESET}")
+                print(f"# skipping {pkgname}, already exists.")
     except TypeError:
         print(f"# package “{pkgname}” does not exist.")
     duration = time.monotonic() - start
