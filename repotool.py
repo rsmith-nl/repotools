@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-10-09T23:14:51+0200
-# Last modified: 2024-09-15T11:15:01+0200
+# Last modified: 2025-02-11T00:22:31+0100
 
 import glob
 import hashlib
@@ -230,7 +230,7 @@ def cmd_get(cur, start, pkgname):
         if not os.path.exists(PKGDIR + pkgname):
             download(rp[0])
         else:
-            print(f"{PURPLE}# skipping {pkgname}, already exists.{RESET}")
+            print(f"# skipping {pkgname}, already exists.")
     duration = time.monotonic() - start
     print(f"{YELLOW}# duration: {duration:.3f} s{RESET}")
 
@@ -457,7 +457,7 @@ def download(repopath):
         "-O",
         f"http://pkg.freebsd.org/{ABI}/{REL}/" + repopath,
     ]
-    print(f"Downloading “{repopath}”... ", end="")
+    print(f"{BOLD_WHITE}Downloading “{repopath}”... {RESET}", end="")
     cp = sp.run(args)
     if cp.returncode != 0:
         print(f"{RED}failed, code {cp.returncode}.{RESET}")
