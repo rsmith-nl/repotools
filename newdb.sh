@@ -5,7 +5,7 @@
 # Copyright © 2022 R.F. Smith <rsmith@xs4all.nl>
 # SPDX-License-Identifier: MIT
 # Created: 2022-11-06T11:02:30+0100
-# Last modified: 2024-09-14T11:35:48+0200
+# Last modified: 2025-04-13T09:02:56+0200
 
 BOLD_WHITE='\033[1;37m'
 CYAN='\033[0;36m'
@@ -17,12 +17,12 @@ BOLD_YELLOW='\033[1;33m'
 RESET='\033[0m' # No Color
 
 echo -n "Downloading new package database... "
-curl --silent -O http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.txz
-tar -xOf packagesite.txz packagesite.yaml > new.yaml
+curl --silent -O http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.pkg
+tar -xOf packagesite.pkg packagesite.yaml > new.yaml
 printf "${GREEN}done.${RESET}\n"
 
 echo -n "Verifying public key... "
-tar -xOf packagesite.txz packagesite.yaml.pub > new.pub
+tar -xOf packagesite.pkg packagesite.yaml.pub > new.pub
 KEYOUT=$(openssl pkey -pubcheck -pubin -in new.pub -noout)
 if [ "${KEYOUT}" != "Key is valid" ]; then
     printf "\n${BOLD_RED}An error occurred. Public key is not valid. Exiting!${RESET}\n"
@@ -32,7 +32,7 @@ else
     printf "${GREEN}${KEYOUT}${RESET}\n"
 fi
 echo -n "Verifying digest... "
-tar -xOf packagesite.txz packagesite.yaml.sig > new.sig
+tar -xOf packagesite.pkg packagesite.yaml.sig > new.sig
 DGSTOUT=$(sha256 -q new.yaml | tr -d '\n' | \
     openssl dgst -verify new.pub -signature new.sig)
 if [ "${DGSTOUT}" != "Verified OK" ]; then
@@ -51,11 +51,12 @@ if [ $DIFFRESULT -eq 1 ]; then
     mv -f packagesite.yaml $NEWNAME
     mv new.yaml packagesite.yaml
     echo -n "Updating package files... "
-    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.txz
-    cp -p repo/packagesite.txz repo/packagesite.pkg
-    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/data.txz
-    cp -p repo/data.txz repo/data.pkg
-    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/meta.txz
+    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/packagesite.pkg
+    cp -p repo/packagesite.pkg repo/packagesite.tzst
+    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/data.pkg
+    cp -p repo/data.txz repo/data.tzst
+    curl --silent -O --output-dir repo http://pkg.freebsd.org/freebsd:14:x86:64/quarterly/meta
+    cp -p repo/meta repo/meta.conf
     printf "${GREEN}done.${RESET}\n"
     chmod 400 packagesite.yaml
     ./makedb
